@@ -30,6 +30,8 @@ class Environment<T extends Record<string, string | number | boolean>> {
 
 const singleton = new Environment({
     PORT: 80,
+    MONGO_URL: "unknown",
+    MONGO_DB: "unknown",
 });
 
 const env = ProxyModel.create(singleton, (s) => s.data);

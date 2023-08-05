@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 import path from "path";
 
 import apiRouter from "./routers/apiRouter";
+import { initializeDb } from "./db/connect";
 
 env.applyEnv();
 
@@ -40,6 +41,10 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "web", "dist", "index.html"));
 });
 
-app.listen(env.PORT, () => {
-    return console.log(`Express is listening at http://localhost:${env.PORT}`);
+initializeDb().then(() => {
+    app.listen(env.PORT, () => {
+        return console.log(
+            `Express is listening at http://localhost:${env.PORT}`
+        );
+    });
 });
