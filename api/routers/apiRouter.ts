@@ -18,26 +18,30 @@ router.all("*", (req, res) => {
 
 router.use((error, request, response, next) => {
     // Error handling middleware functionality
-    console.log(`Caught error ${error.message}`); // log the error
     const status = error.status || 400;
 
     if (error instanceof DbError) {
         if (process.env.NODE_ENV === "production") {
-            return response.status(status).json({
+            response.status(status).json({
                 message: "Database error encountered. Please contact support.",
             });
+            return;
         }
 
-        return response.status(status).json({
+        response.status(status).json({
             message: error.message,
         });
+        return;
     }
 
     if (error instanceof UserError) {
-        return response.status(status).json({
+        response.status(status).json({
             message: error.message,
         });
+        return;
     }
+
+    console.log("caught uknown error", error);
     response.status(status).json({
         message: "An unknown error was encountered",
     });

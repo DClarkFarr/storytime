@@ -32,6 +32,7 @@ const singleton = new Environment({
     PORT: 80,
     MONGO_URL: "unknown",
     MONGO_DB: "unknown",
+    CORS_ORIGIN: "blocked all",
 });
 
 const env = ProxyModel.create(singleton, (s) => s.data);

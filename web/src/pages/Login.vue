@@ -10,18 +10,14 @@ const error = ref("");
 const form = reactive({
     email: "",
     password: "",
-    firstName: "",
-    lastName: "",
 });
 
 const resetForm = () => {
     form.email = "";
     form.password = "";
-    form.firstName = "";
-    form.lastName = "";
 };
 
-const onRegister = async () => {
+const onLogin = async () => {
     if (isCreating.value) return;
 
     isCreating.value = true;
@@ -29,7 +25,7 @@ const onRegister = async () => {
 
     try {
         const createdUser = await httpClient
-            .post("/auth/register", form)
+            .post("/auth/login", form)
             .then((res) => toUser(res.data.user));
 
         console.log("createdUser", createdUser);
@@ -49,9 +45,12 @@ const onRegister = async () => {
         class="form-page flex justify-center items-center w-screen h-screen bg-gray-300"
     >
         <form
-            @submit.prevent="onRegister"
+            @submit.prevent="onLogin"
             class="form bg-white p-4 shadow w-full max-w-[600px]"
         >
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-center">Login</h2>
+            </div>
             <div class="mb-4">
                 <label>Email</label>
                 <input
@@ -70,26 +69,7 @@ const onRegister = async () => {
                     v-model="form.password"
                 />
             </div>
-            <div class="lg:flex gap-x-4">
-                <div class="lg:w-1/2 mb-4">
-                    <label>First Name</label>
-                    <input
-                        class="input"
-                        type="text"
-                        name="firstName"
-                        v-model="form.firstName"
-                    />
-                </div>
-                <div class="lg:w-1/2 mb-4">
-                    <label>Last Name</label>
-                    <input
-                        class="input"
-                        type="text"
-                        name="lastName"
-                        v-model="form.lastName"
-                    />
-                </div>
-            </div>
+
             <div class="mb-4" v-if="error">
                 <div class="text-red-500">{{ error }}</div>
             </div>
@@ -99,7 +79,7 @@ const onRegister = async () => {
                     class="bg-sky-600 hover:bg-sky-800 text-white px-3 py-1"
                     :disabled="isCreating"
                 >
-                    {{ isCreating ? "Creating..." : "Create User" }}
+                    {{ isCreating ? "Logging in..." : "Login" }}
                 </button>
             </div>
         </form>

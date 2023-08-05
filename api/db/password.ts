@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
 
-const hashSalt = "my cool hash that is awesome";
+const hashSalt = 10;
 
 export const createPassword = (plainPassword: string) => {
     return bcrypt.hashSync(plainPassword, hashSalt);
 };
 
-export const checkPassword = (password, hash) => {
+export const checkPassword = (password: string, hash: string) => {
     return bcrypt.compareSync(password, hash);
 };

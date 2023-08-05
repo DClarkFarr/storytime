@@ -3,20 +3,21 @@ import { getUsersCollection } from "../../db/collections";
 import UserError from "../../errors/UserError";
 import DbError from "../../errors/DbError";
 import { createPassword } from "../../db/password";
+import { toUserObject } from "../../db/user";
 
 const router = Router();
 
 router.post("/login", async (req, res) => {});
 
-router.post("/register", async (req, res) => {
+router.post("/register", async (req, res, next) => {
     const { email, password, firstName, lastName } = req.body;
 
     if (!email || !password) {
-        throw new UserError("missing email or password");
+        next(new UserError("missing email or password"));
     }
 
     if (!firstName || !lastName) {
-        throw new UserError("missing first or last name");
+        next(new UserError("missing first or last name"));
     }
 
     const userCollection = await getUsersCollection();
@@ -32,9 +33,13 @@ router.post("/register", async (req, res) => {
 
         const user = await userCollection.findOne({ _id: insertedId });
 
-        res.json({ user });
+        res.json({ user: toUserObject(user) });
     } catch (err) {
-        throw new DbError(err.message);
+        if (err.message.includes("duplicate key error")) {
+            next(new UserError("Email already exists"));
+        } else {
+            next(new DbError(err.message));
+        }
     }
 });
 

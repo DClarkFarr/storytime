@@ -28,7 +28,20 @@ if (app.get("env") === "production") {
     sessConfig.cookie.secure = true; // serve secure cookies
 }
 
-app.use(cors());
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            // db.loadOrigins is an example call to load
+            // a list of origins from a backing database
+            if (app.get("env") === "production") {
+                return callback(null, env.CORS_ORIGIN);
+            }
+
+            callback(null, origin);
+        },
+        credentials: true,
+    })
+);
 app.use(session(sessConfig));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
