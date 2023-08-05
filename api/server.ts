@@ -9,6 +9,8 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
 
+import apiRouter from "./routers/apiRouter";
+
 env.applyEnv();
 
 const app = express();
@@ -31,6 +33,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "..", "web", "dist")));
+
+app.use("/api", apiRouter);
 
 app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "web", "dist", "index.html"));
