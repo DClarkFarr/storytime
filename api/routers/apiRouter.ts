@@ -3,10 +3,12 @@ import UserError from "../errors/UserError";
 import DbError from "../errors/DbError";
 
 import authRouter from "./apiRouter/auth";
+import userRouter from "./apiRouter/user";
 
 const router = Router();
 
 router.use("/auth", authRouter);
+router.use("/user", userRouter);
 
 router.get("/", (req, res) => {
     res.json({ message: "Hello, world!" });
