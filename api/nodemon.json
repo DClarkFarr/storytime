@@ -1,0 +1,12 @@
+{
+    "watch": [
+        "."
+    ],
+    "ext": "ts,json,cjs",
+    "ignore": [
+        "src/**/*.spec.ts",
+        "node_mdodules",
+        "dist",
+        "uploads"
+    ]
+}
