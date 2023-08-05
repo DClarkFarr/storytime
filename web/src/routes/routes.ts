@@ -2,6 +2,13 @@ const routes = [
     {
         path: "/",
         component: () => import("../pages/Home.vue"),
+        meta: {
+            auth: true,
+        },
+    },
+    {
+        path: "/register",
+        component: () => import("../pages/Register.vue"),
     },
     {
         path: "/:pathMatch(.*)*",

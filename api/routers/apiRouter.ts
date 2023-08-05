@@ -2,22 +2,14 @@ import { Router } from "express";
 import UserError from "../errors/UserError";
 import DbError from "../errors/DbError";
 
+import authRouter from "./apiRouter/auth";
+
 const router = Router();
+
+router.use("/auth", authRouter);
 
 router.get("/", (req, res) => {
     res.json({ message: "Hello, world!" });
-});
-
-router.get("/bad", (req, res) => {
-    throw new Error("This is a generic bad error");
-});
-
-router.get("/bad/user", (req, res) => {
-    throw new UserError("Users cannot be here");
-});
-
-router.get("/bad/db", (req, res) => {
-    throw new DbError("Db cannot be here");
 });
 
 router.all("*", (req, res) => {
