@@ -24,11 +24,11 @@ const onLogin = async () => {
     error.value = "";
 
     try {
-        const createdUser = await httpClient
+        const loggedUser = await httpClient
             .post("/auth/login", form)
             .then((res) => toUser(res.data.user));
 
-        console.log("createdUser", createdUser);
+        console.log("loggedUser", loggedUser);
         resetForm();
     } catch (err) {
         console.log("error creating user", err);

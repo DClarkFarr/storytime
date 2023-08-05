@@ -2,12 +2,30 @@ import { Router } from "express";
 import { getUsersCollection } from "../../db/collections";
 import UserError from "../../errors/UserError";
 import DbError from "../../errors/DbError";
-import { createPassword } from "../../db/password";
+import { checkPassword, createPassword } from "../../db/password";
 import { toUserObject } from "../../db/user";
 
 const router = Router();
 
-router.post("/login", async (req, res) => {});
+router.post("/login", async (req, res, next) => {
+    const { email, password } = req.body;
+
+    const userCollection = await getUsersCollection();
+
+    const user = await userCollection.findOne({ email: email });
+
+    if (!user) {
+        return next(new UserError("User not found"));
+    }
+
+    if (!checkPassword(password, user.password)) {
+        return next(new UserError("Incorrect password"));
+    }
+
+    req.session.userId = user._id.toString();
+
+    res.json({ user: toUserObject(user) });
+});
 
 router.post("/register", async (req, res, next) => {
     const { email, password, firstName, lastName } = req.body;
@@ -32,6 +50,8 @@ router.post("/register", async (req, res, next) => {
         });
 
         const user = await userCollection.findOne({ _id: insertedId });
+
+        req.session.userId = user._id.toString();
 
         res.json({ user: toUserObject(user) });
     } catch (err) {
