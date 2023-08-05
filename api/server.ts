@@ -10,7 +10,8 @@ import bodyParser from "body-parser";
 import path from "path";
 
 import apiRouter from "./routers/apiRouter";
-import { initializeDb } from "./db/connect";
+import { getClient, initializeDb } from "./db/connect";
+import MongoStore from "connect-mongo";
 
 env.applyEnv();
 
@@ -21,6 +22,11 @@ const sessConfig = {
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false },
+    store: MongoStore.create({
+        clientPromise: getClient(),
+        dbName: env.MONGO_DB,
+        collectionName: "sessions",
+    }),
 };
 
 if (app.get("env") === "production") {
