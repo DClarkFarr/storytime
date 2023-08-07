@@ -16,6 +16,8 @@ import PlusIcon from "~icons/fa6-solid/plus";
 import { useCanvasModule } from "@/hooks/useCanvasModule";
 import { keyBy } from "lodash-es";
 
+import ElementItem from "./Canvas/ElementItem.vue";
+
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
 }>();
@@ -74,7 +76,9 @@ const computeElementThumbnails = () => {
     if (!canvas) return [];
 
     elementThumbnails.value = elements.value.reduce((acc, element) => {
-        acc[element.id] = findElementById(element.id)?.toSVG();
+        acc[element.id] = findElementById(element.id)?.toDataURL({
+            format: "png",
+        });
         return acc;
     }, {} as Record<string, string | undefined>);
 };
@@ -111,6 +115,14 @@ const {
     },
 });
 
+const editItemId = computed(() => {
+    if (selectedUUIDs.value.length === 1) {
+        return selectedUUIDs.value[0];
+    }
+
+    return null;
+});
+
 onMounted(() => {
     if (canvasRef.value && canvasContainerRef.value) {
         initialize(canvasRef.value, canvasContainerRef.value);
@@ -128,7 +140,7 @@ onMounted(() => {
             class="canvas_sidebar shrink w-[250px] bg-gray-100 border border-slate-300 p-4"
         >
             <h3 class="text-lg font-semibold mb-4">Layers</h3>
-            <div class="canvas__add">
+            <div class="canvas__add mb-4">
                 <Dropdown>
                     <template #default="{ close }">
                         <button
@@ -170,6 +182,16 @@ onMounted(() => {
                         </button>
                     </template>
                 </Dropdown>
+            </div>
+            <div class="canvas__elements">
+                <ElementItem
+                    v-for="element in elements"
+                    :edit="editItemId === element.id"
+                    :element="element"
+                    :selected="selectedUUIDs.includes(element.id)"
+                    :thumbnail="elementThumbnails[element.id]"
+                    :key="element.id"
+                />
             </div>
         </div>
         <div
