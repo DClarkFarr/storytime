@@ -67,16 +67,15 @@ const elementsById = computed(() => {
     return keyBy(elements.value, "id");
 });
 
-const { initialize, addElementsToCanvas, addElementToCanvas } = useCanvasModule(
-    {
+const { initialize, addElementsToCanvas, addElementToCanvas, selectedUUIDs } =
+    useCanvasModule({
         onChangeCanvasElement: (canvasElement) => {
             syncCanvasElementToElement(
                 canvasElement,
                 elementsById.value[canvasElement.uuid]
             );
         },
-    }
-);
+    });
 
 onMounted(() => {
     if (canvasRef.value && canvasContainerRef.value) {

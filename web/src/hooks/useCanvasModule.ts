@@ -6,6 +6,7 @@ import {
     createShapeCanvasElement,
     createTextCanvasElement,
 } from "@/methods/canvas";
+import { ref } from "vue";
 
 export function useCanvasModule({
     width: canvasWidth = 920,
@@ -18,6 +19,8 @@ export function useCanvasModule({
 } = {}) {
     let canvas: fabric.Canvas | null = null;
     let canvasElements: FabricObject[] = [];
+
+    const selectedUUIDs = ref<string[]>([]);
 
     const setCanvas = (canvasNode: HTMLCanvasElement) => {
         canvas = new fabric.Canvas(canvasNode, {
@@ -52,7 +55,24 @@ export function useCanvasModule({
         };
 
         const updateSelection = (e: fabric.IEvent<MouseEvent>) => {
-            // console.log("got event", e);
+            const ids = selectedUUIDs.value;
+            if (e.selected) {
+                (e.selected as FabricObject[]).forEach((element) => {
+                    if (!ids.includes(element.uuid)) {
+                        ids.push(element.uuid);
+                    }
+                });
+            }
+
+            if (e.deselected) {
+                (e.deselected as FabricObject[]).forEach((element) => {
+                    if (ids.includes(element.uuid)) {
+                        ids.splice(ids.indexOf(element.uuid), 1);
+                    }
+                });
+            }
+
+            setSelectedUUIDs(ids);
         };
 
         canvas?.on("object:moving", updateControls);
@@ -64,6 +84,10 @@ export function useCanvasModule({
         canvas?.on("selection:cleared", updateSelection);
         canvas?.on("selection:updated", updateSelection);
         canvas?.on("selection:created", updateSelection);
+    };
+
+    const setSelectedUUIDs = (ids: string[]) => {
+        selectedUUIDs.value = ids;
     };
 
     const initialize = (
@@ -192,6 +216,8 @@ export function useCanvasModule({
     const getCanvasElements = () => canvasElements;
 
     return {
+        selectedUUIDs,
+        setSelectedUUIDs,
         getCanvas,
         getCanvasElements,
         setCanvas,
