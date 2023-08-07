@@ -70,11 +70,9 @@ export type CanvasElementTypes = "group" | "text" | "image" | "draw" | "shape";
 export interface FabricTextElement extends fabric.Text {
     uuid: string;
 }
-
 export interface FabricImageElement extends fabric.Image {
     uuid: string;
 }
-
 export interface FabricRectElement extends fabric.Rect {
     uuid: string;
 }
@@ -82,5 +80,8 @@ export interface FabricCircleElement extends fabric.Circle {
     uuid: string;
 }
 export interface FabricTriangleElement extends fabric.Triangle {
+    uuid: string;
+}
+export interface FabricObject extends fabric.Object {
     uuid: string;
 }

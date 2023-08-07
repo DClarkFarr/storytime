@@ -2,22 +2,14 @@
 import {
     CanvasElement,
     CanvasElementTypes,
-    CanvasTextElement,
-    FabricTextElement,
     CanvasShapeTypes,
-    CanvasShapeElement,
 } from "@/types/Canvas";
 import { computed, onMounted, ref } from "vue";
 import { createTextElement, createShapeElement } from "@/methods/canvas";
-import { fabric } from "fabric";
-import { debounce } from "lodash-es";
-
-fabric.Object.prototype.transparentCorners = false;
 
 import Dropdown from "./controls/Dropdown.vue";
 import PlusIcon from "~icons/fa6-solid/plus";
-
-import { useResizeObserver } from "@vueuse/core";
+import { useCanvasModule } from "@/hooks/useCanvasModule";
 
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
@@ -35,12 +27,7 @@ const props = withDefaults(
 );
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-
 const canvasContainerRef = ref<HTMLDivElement | null>(null);
-
-const canvas = ref<fabric.Canvas | null>(null);
-
-const canvasElements = ref<any[]>([]);
 
 const computedStyles = computed(() => {
     return {
@@ -51,147 +38,36 @@ const computedStyles = computed(() => {
 const elements = computed({
     get: () => props.elements,
     set: (val) => {
-        console.log("emitting val", val);
         emit("update:elements", val);
     },
 });
 
 const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
+    let element: CanvasElement;
     if (type === "text") {
-        const element = createTextElement();
-
-        element.index = elements.value.length;
-
-        elements.value.push(element);
-
-        addElementToCanvas(element);
+        element = createTextElement();
     } else if (type === "shape" && alt) {
-        const element = createShapeElement(alt as CanvasShapeTypes);
-
-        element.index = elements.value.length;
-
-        elements.value.push(element);
-
-        addElementToCanvas(element);
+        element = createShapeElement(alt as CanvasShapeTypes);
+    } else {
+        throw new Error("Unknown layer type: " + type);
     }
+
+    element.index = elements.value.length;
+    elements.value.push(element);
+
+    addElementToCanvas(element);
 };
 
-const setCanvasListeners = () => {
-    const updateControls = (e: fabric.IEvent<MouseEvent>) => {
-        console.log("canvas event", e);
-    };
-
-    canvas.value?.on("object:moving", updateControls);
-    canvas.value?.on("object:scaling", updateControls);
-    canvas.value?.on("object:resizing", updateControls);
-    canvas.value?.on("object:rotating", updateControls);
-    canvas.value?.on("object:skewing", updateControls);
-};
-const addElementsToCanvas = () => {
-    elements.value.forEach((element) => {
-        addElementToCanvas(element);
-    });
-
-    setCanvasListeners();
-};
-
-const addElementToCanvas = (data: CanvasElement) => {
-    if (data.type === "text") {
-        addTextElementToCanvas(data);
-    } else if (data.type === "shape") {
-        addShapeElementToCanvas(data);
-    }
-};
-
-const addShapeElementToCanvas = (data: CanvasShapeElement) => {
-    const canvasElement = createShapeCanvasElement(data);
-
-    console.log("canvas element", canvasElement);
-    canvas.value?.add(canvasElement);
-    canvasElements.value.push(canvasElement);
-};
-
-const createShapeCanvasElement = (data: CanvasShapeElement): fabric.Object => {
-    const obj = new fabric.Rect({
-        top: data.position.y,
-        left: data.position.x,
-        angle: data.position.rotation,
-        width: data.position.width,
-        height: data.position.height,
-        fill: data.shape.fill,
-        stroke: data.shape.stroke,
-        strokeWidth: data.shape.strokeWidth,
-        backgroundColor: data.shape.background,
-        opacity: data.opacity,
-        // selectable: data.selectable,
-        // evented: data.selectable,
-        // hasControls: true,
-        lockMovementX: false,
-        lockMovementY: false,
-        lockRotation: false,
-        lockScalingX: false,
-        lockScalingY: false,
-    });
-
-    return Object.assign(obj, { uuid: data.id });
-};
-
-const addTextElementToCanvas = (data: CanvasTextElement) => {
-    const canvasElement = createTextCanvasElement(data);
-
-    canvas.value?.add(canvasElement);
-    canvasElements.value.push(canvasElement);
-};
-
-const createTextCanvasElement = (
-    data: CanvasTextElement
-): FabricTextElement => {
-    const obj = new fabric.Text(data.value, {
-        top: data.position.y,
-        left: data.position.x,
-        angle: data.position.rotation,
-        width: data.position.width,
-        height: data.position.height,
-        fontSize: data.font.size,
-        fontWeight: data.font.weight,
-        fontFamily: data.font.family,
-        fill: data.font.color,
-        opacity: data.opacity,
-        selectable: data.selectable,
-        evented: data.selectable,
-        hasControls: true,
-    });
-
-    return Object.assign(obj, { uuid: data.id });
-};
-
-const resizeCanvas = (width: number) => {
-    const ratio = 16 / 9;
-    const scale = width / (canvas.value?.getWidth() || width);
-    const zoom = (canvas.value?.getZoom() || 1) * scale;
-
-    canvas.value?.setDimensions({ width, height: width / ratio });
-    canvas.value?.setViewportTransform([zoom, 0, 0, zoom, 0, 0]);
-};
-
-const resizeCanvasDebounced = debounce(resizeCanvas, 100);
-
-useResizeObserver(canvasContainerRef, (entries) => {
-    const entry = entries[0];
-    const { width: containerWidth } = entry.contentRect;
-
-    console.log("new width", containerWidth);
-    resizeCanvasDebounced(containerWidth);
-});
+const { getCanvas, initialize, addElementsToCanvas, addElementToCanvas } =
+    useCanvasModule();
 
 onMounted(() => {
-    canvas.value = new fabric.Canvas(canvasRef.value);
+    if (canvasRef.value && canvasContainerRef.value) {
+        initialize(canvasRef.value, canvasContainerRef.value);
 
-    addElementsToCanvas();
-
-    const canvasContainerWidth = canvasContainerRef.value?.clientWidth;
-    if (canvasContainerWidth) {
-        resizeCanvas(canvasContainerWidth);
+        addElementsToCanvas(elements.value);
+    } else {
+        console.warn("Canvas refs not set");
     }
 });
 </script>
@@ -251,7 +127,11 @@ onMounted(() => {
             :style="computedStyles"
             ref="canvasContainerRef"
         >
-            <canvas ref="canvasRef" class="canvas__canvas"></canvas>
+            <canvas
+                ref="canvasRef"
+                class="canvas__canvas"
+                width="width"
+            ></canvas>
         </div>
     </div>
 </template>
@@ -261,10 +141,10 @@ onMounted(() => {
     &__container {
         aspect-ratio: 16 / 9;
         min-width: 400px;
+        max-width: 100%;
 
         canvas {
-            height: 100%;
-            width: 100%;
+            aspect-ratio: 16 / 9;
         }
     }
 }
