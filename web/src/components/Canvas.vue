@@ -5,11 +5,16 @@ import {
     CanvasShapeTypes,
 } from "@/types/Canvas";
 import { computed, onMounted, ref } from "vue";
-import { createTextElement, createShapeElement } from "@/methods/canvas";
+import {
+    createTextElement,
+    createShapeElement,
+    syncCanvasElementToElement,
+} from "@/methods/canvas";
 
 import Dropdown from "./controls/Dropdown.vue";
 import PlusIcon from "~icons/fa6-solid/plus";
 import { useCanvasModule } from "@/hooks/useCanvasModule";
+import { keyBy } from "lodash-es";
 
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
@@ -58,10 +63,17 @@ const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
     addElementToCanvas(element);
 };
 
+const elementsById = computed(() => {
+    return keyBy(elements.value, "id");
+});
+
 const { initialize, addElementsToCanvas, addElementToCanvas } = useCanvasModule(
     {
         onChangeCanvasElement: (canvasElement) => {
-            console.log("must sync!", canvasElement);
+            syncCanvasElementToElement(
+                canvasElement,
+                elementsById.value[canvasElement.uuid]
+            );
         },
     }
 );

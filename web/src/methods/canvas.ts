@@ -1,10 +1,14 @@
 import {
     CanvasBaseElement,
+    CanvasElement,
     CanvasShapeElement,
     CanvasShapeTypes,
     CanvasTextElement,
+    FabricCircleElement,
+    FabricObject,
     FabricRectElement,
     FabricTextElement,
+    FabricTriangleElement,
 } from "@/types/Canvas";
 import { v4 as uuidv4 } from "uuid";
 import { fabric } from "fabric";
@@ -113,3 +117,79 @@ export function createTextCanvasElement(
 export function createImageElement() {}
 
 export function createDrawElement() {}
+
+export function syncCanvasElementPositionToElement(
+    canvasElement: FabricObject,
+    element: CanvasElement
+) {
+    Object.assign(element.position, {
+        y: canvasElement.top,
+        x: canvasElement.left,
+        rotation: canvasElement.angle,
+        width: canvasElement.width,
+        height: canvasElement.height,
+        scaleX: canvasElement.scaleX,
+        scaleY: canvasElement.scaleY,
+    });
+}
+
+export function syncCanvasTextToElement(
+    canvasElement: FabricTextElement,
+    element: CanvasTextElement
+) {
+    Object.assign(element.font, {
+        size: canvasElement.fontSize,
+        weight: canvasElement.fontWeight,
+        family: canvasElement.fontFamily,
+        color: canvasElement.fill,
+    });
+
+    element.value = canvasElement.text || "";
+}
+
+export function getCanvasElementShapeType(
+    canvasElement:
+        | FabricRectElement
+        | FabricCircleElement
+        | FabricTriangleElement
+): CanvasShapeTypes {
+    if (canvasElement instanceof fabric.Rect) {
+        return "square";
+    } else if (canvasElement instanceof fabric.Circle) {
+        return "circle";
+    } else if (canvasElement instanceof fabric.Triangle) {
+        return "triangle";
+    }
+
+    throw new Error("Unknown shape type");
+}
+
+export function syncCanvasShapeToElement(
+    canvasElement:
+        | FabricRectElement
+        | FabricCircleElement
+        | FabricTriangleElement,
+    element: CanvasShapeElement
+) {
+    Object.assign(element.shape, {
+        fill: canvasElement.fill,
+        stroke: canvasElement.stroke,
+        strokeWidth: canvasElement.strokeWidth,
+        background: canvasElement.backgroundColor,
+    });
+
+    element.value = getCanvasElementShapeType(canvasElement);
+}
+
+export function syncCanvasElementToElement(
+    canvasElement: FabricObject,
+    element: CanvasElement
+) {
+    syncCanvasElementPositionToElement(canvasElement, element);
+
+    if (element.type === "text") {
+        syncCanvasTextToElement(canvasElement as FabricTextElement, element);
+    } else if (element.type === "shape") {
+        syncCanvasShapeToElement(canvasElement as FabricRectElement, element);
+    }
+}

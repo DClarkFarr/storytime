@@ -23,6 +23,7 @@ export function useCanvasModule({
         canvas = new fabric.Canvas(canvasNode, {
             width: canvasWidth,
             height: canvasWidth * heightRatio,
+            preserveObjectStacking: true,
         });
     };
 
