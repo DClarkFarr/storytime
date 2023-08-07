@@ -4,7 +4,7 @@ import {
     CanvasElementTypes,
     CanvasShapeTypes,
 } from "@/types/Canvas";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import {
     createTextElement,
     createShapeElement,
@@ -40,12 +40,16 @@ const computedStyles = computed(() => {
     };
 });
 
-const elements = computed({
-    get: () => props.elements,
-    set: (val) => {
-        emit("update:elements", val);
-    },
-});
+// const elements = computed({
+//     get: () => props.elements,
+//     set: (val) => {
+//         emit("update:elements", val);
+//     },
+// });
+
+const elements = computed(() => props.elements);
+
+const elementThumbnails = ref<Record<string, string | undefined>>({});
 
 const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
     let element: CanvasElement;
@@ -61,21 +65,51 @@ const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
     elements.value.push(element);
 
     addElementToCanvas(element);
+
+    emit("update:elements", elements.value);
+};
+
+const computeElementThumbnails = () => {
+    const canvas = getCanvas();
+    if (!canvas) return [];
+
+    elementThumbnails.value = elements.value.reduce((acc, element) => {
+        acc[element.id] = findElementById(element.id)?.toSVG();
+        return acc;
+    }, {} as Record<string, string | undefined>);
 };
 
 const elementsById = computed(() => {
     return keyBy(elements.value, "id");
 });
 
-const { initialize, addElementsToCanvas, addElementToCanvas, selectedUUIDs } =
-    useCanvasModule({
-        onChangeCanvasElement: (canvasElement) => {
-            syncCanvasElementToElement(
-                canvasElement,
-                elementsById.value[canvasElement.uuid]
-            );
-        },
-    });
+watch(
+    elements,
+    () => {
+        computeElementThumbnails();
+    },
+    {
+        deep: true,
+    }
+);
+
+const {
+    getCanvas,
+    initialize,
+    addElementsToCanvas,
+    addElementToCanvas,
+    findElementById,
+    selectedUUIDs,
+} = useCanvasModule({
+    onChangeCanvasElement: (canvasElement) => {
+        syncCanvasElementToElement(
+            canvasElement,
+            elementsById.value[canvasElement.uuid]
+        );
+
+        emit("update:elements", elements.value);
+    },
+});
 
 onMounted(() => {
     if (canvasRef.value && canvasContainerRef.value) {

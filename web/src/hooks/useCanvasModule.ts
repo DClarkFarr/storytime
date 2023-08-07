@@ -215,8 +215,13 @@ export function useCanvasModule({
     const getCanvas = () => canvas;
     const getCanvasElements = () => canvasElements;
 
+    const findElementById = (id: string) => {
+        return canvasElements.find((element) => element.uuid === id);
+    };
+
     return {
         selectedUUIDs,
+        findElementById,
         setSelectedUUIDs,
         getCanvas,
         getCanvasElements,
