@@ -6,12 +6,16 @@ import {
     createShapeCanvasElement,
     createTextCanvasElement,
 } from "@/methods/canvas";
-import { computed } from "vue";
 
 export function useCanvasModule({
     width: canvasWidth = 920,
     heightRatio = 9 / 16,
-}: { width?: number; heightRatio?: number } = {}) {
+    onChangeCanvasElement,
+}: {
+    width?: number;
+    heightRatio?: number;
+    onChangeCanvasElement?: (canvasElement: FabricObject) => void;
+} = {}) {
     let canvas: fabric.Canvas | null = null;
     let canvasElements: FabricObject[] = [];
 
@@ -101,26 +105,21 @@ export function useCanvasModule({
     };
 
     const applyListenersToCanvasElement = (canvasElement: FabricObject) => {
-        console.log("setting listeners for", canvasElement);
-
-        canvasElement.on("moving", (e) =>
-            handleMarkerEvent("moving", e.transform?.target as FabricObject)
+        canvasElement.on("moving", () =>
+            handleCanvasElementEvent("moving", canvasElement)
         );
-        canvasElement.on("modifying", (e) =>
-            handleMarkerEvent("modifying", e.transform?.target as FabricObject)
+        canvasElement.on("modifying", () =>
+            handleCanvasElementEvent("modifying", canvasElement)
         );
-        canvasElement.on("scaling", (e) => {
-            handleMarkerEvent("scaling", e.transform?.target as FabricObject);
+        canvasElement.on("scaling", () => {
+            handleCanvasElementEvent("scaling", canvasElement);
         });
-        canvasElement.on("resizing", (e) =>
-            handleMarkerEvent("resizing", e.transform?.target as FabricObject)
+        canvasElement.on("rotating", () =>
+            handleCanvasElementEvent("rotating", canvasElement)
         );
-        canvasElement.on("rotating", (e) =>
-            handleMarkerEvent("rotating", e.transform?.target as FabricObject)
-        );
-        // canvasElement.on("event:skewed", (e) =>
-        //     handleMarkerEvent("skewed", e.transform?.target as FabricObject)
-        // );
+        canvasElement.on("changed", () => {
+            handleCanvasElementEvent("changed", canvasElement);
+        });
     };
 
     const convertScaleToResize = (canvasElement: FabricObject) => {
@@ -139,37 +138,53 @@ export function useCanvasModule({
             canvasElement instanceof fabric.Triangle
         );
     };
-    const handleMarkerEvent = (
+
+    const keyedCanvasChangeDebouncers: {
+        [K: string]: (canvasElement: FabricObject) => void;
+    } = {};
+    const getCanvasChangeDebouncer = (key: string) => {
+        if (!keyedCanvasChangeDebouncers[key]) {
+            keyedCanvasChangeDebouncers[key] = debounce(
+                (canvasElement: FabricObject) => {
+                    if (typeof onChangeCanvasElement === "function") {
+                        onChangeCanvasElement(canvasElement);
+                    }
+                },
+                100
+            );
+        }
+
+        return keyedCanvasChangeDebouncers[key];
+    };
+
+    const emitCanvasElementChange = (
+        eventType: string,
+        canvasElement: FabricObject
+    ) => {
+        const debouncer = getCanvasChangeDebouncer(eventType);
+        debouncer(canvasElement);
+    };
+
+    const handleCanvasElementEvent = (
         eventType: string,
         canvasElement: FabricObject
     ) => {
         if (!canvasElement) {
-            console.warn("handleMarkerEvent() -> recevied no canvas element");
+            console.warn(
+                "handleCanvasElementEvent(" +
+                    eventType +
+                    ") -> recevied no canvas element"
+            );
             return;
         }
-        console.log("marker event", eventType);
 
         if (eventType === "scaling") {
             if (canvasElementIsShape(canvasElement)) {
                 convertScaleToResize(canvasElement);
             }
         }
-        // const elementIndex = canvasElements.findIndex((m) => {
-        //     return m.uuid === canvasElement.uuid;
-        // });
 
-        // console.log("handle event", eventType, elementIndex, canvasObj);
-
-        // if (elementIndex === -1) {
-        //     return false;
-        // }
-
-        // const element = canvasElements[elementIndex];
-
-        // const elements = [...canvasElements];
-        // elements.splice(elementIndex, 1, element);
-
-        // canvasElements = elements;
+        emitCanvasElementChange(eventType, canvasElement);
     };
 
     const getCanvas = () => canvas;

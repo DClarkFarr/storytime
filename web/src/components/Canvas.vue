@@ -21,7 +21,7 @@ const props = withDefaults(
         elements?: CanvasElement[];
     }>(),
     {
-        width: 600,
+        width: undefined,
         elements: () => [],
     }
 );
@@ -31,7 +31,7 @@ const canvasContainerRef = ref<HTMLDivElement | null>(null);
 
 const computedStyles = computed(() => {
     return {
-        "max-width": `${props.width}px`,
+        "max-width": props.width ? `${props.width}px` : "100%",
     };
 });
 
@@ -58,8 +58,13 @@ const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
     addElementToCanvas(element);
 };
 
-const { getCanvas, initialize, addElementsToCanvas, addElementToCanvas } =
-    useCanvasModule();
+const { initialize, addElementsToCanvas, addElementToCanvas } = useCanvasModule(
+    {
+        onChangeCanvasElement: (canvasElement) => {
+            console.log("must sync!", canvasElement);
+        },
+    }
+);
 
 onMounted(() => {
     if (canvasRef.value && canvasContainerRef.value) {

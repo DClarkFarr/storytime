@@ -7,9 +7,11 @@ export interface CanvasBaseElement {
     position: {
         x: number;
         y: number;
-        width: number;
-        height: number;
+        width?: number;
+        height?: number;
         rotation: number;
+        scaleX?: number;
+        scaleY?: number;
     };
     opacity: number;
     selectable: boolean;

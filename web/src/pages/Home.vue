@@ -6,5 +6,5 @@ import { ref } from "vue";
 const elements = ref<CanvasElement[]>([]);
 </script>
 <template>
-    <Canvas v-model:elements="elements" />
+    <Canvas v-model:elements="elements" :width="1200" />
 </template>
