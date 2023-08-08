@@ -1,11 +1,23 @@
 <script lang="ts" setup>
-import { onMounted } from "vue";
+import httpClient from "@/services/httpClient";
+import { Story } from "@/types/Story";
+import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
+const isLoading = ref(false);
+const story = ref<Story | null>(null);
 
-const loadStory = (id: string) => {
-    console.log(id);
+const loadStory = async (id: string) => {
+    isLoading.value = true;
+    try {
+        story.value = await httpClient
+            .get(`/story/${id}`)
+            .then((response) => response.data.row);
+    } catch (err) {
+        console.error("Error loading story", err);
+    }
+    isLoading.value = false;
 };
 
 onMounted(() => {
