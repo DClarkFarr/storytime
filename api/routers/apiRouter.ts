@@ -2,15 +2,17 @@ import { Router } from "express";
 import UserError from "../errors/UserError";
 import DbError from "../errors/DbError";
 
-import authRouter from "./apiRouter/auth";
-import userRouter from "./apiRouter/user";
-import storyRouter from "./apiRouter/story";
+import authRouter from "./apiRouter/authRouter";
+import userRouter from "./apiRouter/userRouter";
+import storyRouter from "./apiRouter/storyRouter";
+import sceneRouter from "./apiRouter/sceneRouter";
 
 const router = Router();
 
 router.use("/auth", authRouter);
 router.use("/user", userRouter);
 router.use("/story", storyRouter);
+router.use("/scene", sceneRouter);
 
 router.get("/", (req, res) => {
     res.json({ message: "Hello, world!" });
