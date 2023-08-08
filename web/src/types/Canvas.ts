@@ -11,6 +11,7 @@ export interface CanvasBaseElement {
         rotation: number;
         scaleX?: number;
         scaleY?: number;
+        radius?: number;
     };
     opacity: number;
     selectable: boolean;

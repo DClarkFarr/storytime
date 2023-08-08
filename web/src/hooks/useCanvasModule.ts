@@ -6,16 +6,19 @@ import {
     createShapeCanvasElement,
     createTextCanvasElement,
 } from "@/methods/canvas";
-import { ref } from "vue";
+import { useMagicKeys } from "@vueuse/core";
+import { ref, watch } from "vue";
 
 export function useCanvasModule({
     width: canvasWidth = 920,
     heightRatio = 9 / 16,
     onChangeCanvasElement,
+    onRemoveCanvasElement,
 }: {
     width?: number;
     heightRatio?: number;
     onChangeCanvasElement?: (canvasElement: FabricObject) => void;
+    onRemoveCanvasElement?: (canvasElement: FabricObject) => void;
 } = {}) {
     let canvas: fabric.Canvas | null = null;
     let canvasElements: FabricObject[] = [];
@@ -86,6 +89,28 @@ export function useCanvasModule({
         canvas?.on("selection:created", updateSelection);
     };
 
+    const setHotkeyListeners = () => {
+        const keys = useMagicKeys();
+
+        watch(keys.delete, (v) => {
+            if (v) {
+                if (selectedUUIDs.value.length === 1) {
+                    const uuid = selectedUUIDs.value[0];
+                    const canvasElement = findElementById(uuid);
+                    if (canvasElement) {
+                        if (
+                            canvasElement instanceof fabric.IText &&
+                            canvasElement.isEditing
+                        ) {
+                            return;
+                        }
+                        removeCanvasElementById(uuid);
+                    }
+                }
+            }
+        });
+    };
+
     const setSelectedUUIDs = (ids: string[]) => {
         selectedUUIDs.value = ids;
     };
@@ -99,6 +124,8 @@ export function useCanvasModule({
         watchContainerResize(canvasContainer);
 
         setCanvasListeners();
+
+        setHotkeyListeners();
 
         const canvasContainerWidth = canvasContainer?.clientWidth;
         if (canvasContainerWidth) {
@@ -148,12 +175,29 @@ export function useCanvasModule({
     };
 
     const convertScaleToResize = (canvasElement: FabricObject) => {
-        canvasElement.set({
-            height: canvasElement.getScaledHeight(),
-            width: canvasElement.getScaledWidth(),
-            scaleX: 1,
-            scaleY: 1,
-        });
+        if (canvasElement instanceof fabric.Circle) {
+            const scaleX = canvasElement.scaleX || 1;
+            const scaleY = canvasElement.scaleY || 1;
+            const radiusX = canvasElement.getRadiusX() || 1;
+            const radiusY = canvasElement.getRadiusY() || 1;
+
+            const currentRadius = canvasElement.radius as number;
+            const biggestRadius = Math.min(radiusX, radiusY);
+            const radiusRatio = biggestRadius / currentRadius;
+
+            canvasElement.set({
+                radius: biggestRadius,
+                scaleX: scaleX / radiusRatio,
+                scaleY: scaleY / radiusRatio,
+            });
+        } else {
+            canvasElement.set({
+                height: canvasElement.getScaledHeight(),
+                width: canvasElement.getScaledWidth(),
+                scaleX: 1,
+                scaleY: 1,
+            });
+        }
     };
 
     const canvasElementIsShape = (canvasElement: FabricObject) => {
@@ -239,7 +283,6 @@ export function useCanvasModule({
     };
 
     const selectElementsByUUIDs = (uuids: string[]) => {
-        console.log("trying to select", uuids);
         setSelectedUUIDs(uuids);
         selectCanvasElementsByUUIDs(uuids);
     };
@@ -271,6 +314,19 @@ export function useCanvasModule({
         ) as FabricObject;
     };
 
+    const removeCanvasElementById = (id: string) => {
+        canvas?.discardActiveObject();
+        setSelectedUUIDs([]);
+
+        const canvasElement = findElementById(id);
+        canvas?.remove(canvasElement);
+        canvasElements = canvasElements.filter((el) => el.uuid !== id);
+        canvas?.requestRenderAll();
+
+        if (typeof onRemoveCanvasElement === "function") {
+            onRemoveCanvasElement(canvasElement);
+        }
+    };
     return {
         selectedUUIDs,
         findElementById,

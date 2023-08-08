@@ -24,7 +24,7 @@ props;
         <div class="flex items-center gap-x-2 select-none">
             <div
                 class="element-item__thumbnail flex align-center"
-                v-if="thumbnail"
+                v-if="thumbnail && thumbnail.length > 6"
             >
                 <img :src="thumbnail" />
             </div>

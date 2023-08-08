@@ -116,6 +116,15 @@ const {
 
         emit("update:elements", elements.value);
     },
+    onRemoveCanvasElement: (canvasElement) => {
+        const index = elements.value.findIndex(
+            (element) => element.id === canvasElement.uuid
+        );
+        if (index !== -1) {
+            elements.value.splice(index, 1);
+            emit("update:elements", elements.value);
+        }
+    },
 });
 
 const editItemId = computed(() => {
@@ -213,6 +222,26 @@ onMounted(async () => {
                         >
                             <PlusIcon class="inline-block text-xs" />
                             Shape:Square
+                        </button>
+                        <button
+                            class="dropdown__item"
+                            @click="
+                                close();
+                                onAddLayer('shape', 'circle');
+                            "
+                        >
+                            <PlusIcon class="inline-block text-xs" />
+                            Shape:Circle
+                        </button>
+                        <button
+                            class="dropdown__item"
+                            @click="
+                                close();
+                                onAddLayer('shape', 'triangle');
+                            "
+                        >
+                            <PlusIcon class="inline-block text-xs" />
+                            Shape:Triangle
                         </button>
                     </template>
                 </Dropdown>

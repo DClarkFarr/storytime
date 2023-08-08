@@ -35,29 +35,34 @@ export function createTextElement(): CanvasTextElement {
     };
 }
 
-export function createShapeElement(
-    value: CanvasShapeTypes
-): CanvasShapeElement {
-    return {
+export function createShapeElement(value: CanvasShapeTypes) {
+    const obj: CanvasShapeElement = {
         id: uuidv4(),
         type: "shape",
         value,
         position: {
             x: 0,
             y: 0,
-            width: 100,
-            height: 100,
             rotation: 0,
         },
         opacity: 1,
         selectable: true,
         shape: {
             fill: "#efefef",
-            stroke: "transparent",
+            stroke: "#999999",
             strokeWidth: 1,
-            background: "#aaaaaa",
+            background: "transparent",
         },
     };
+
+    if (value === "circle") {
+        obj.position.radius = 50;
+    } else {
+        obj.position.width = 100;
+        obj.position.height = 100;
+    }
+
+    return obj;
 }
 
 export function mapElementPositionToCanvasElement(
@@ -69,6 +74,7 @@ export function mapElementPositionToCanvasElement(
         angle: position.rotation,
         width: position.width,
         height: position.height,
+        radius: position.radius,
         scaleX: position.scaleX || 1,
         scaleY: position.scaleY || 1,
     };
@@ -86,14 +92,23 @@ export function mapElementGenericFieldsToCanvasElement(
 export function createShapeCanvasElement(
     data: CanvasShapeElement
 ): FabricRectElement {
-    const obj = new fabric.Rect({
+    const objectData = {
         ...mapElementPositionToCanvasElement(data.position),
         ...mapElementGenericFieldsToCanvasElement(data),
         fill: data.shape.fill,
         stroke: data.shape.stroke,
         strokeWidth: data.shape.strokeWidth,
-        backgroundColor: data.shape.background,
-    });
+        // backgroundColor: data.shape.background,
+    };
+
+    let obj: fabric.Object;
+    if (data.value === "circle") {
+        obj = new fabric.Circle(objectData);
+    } else if (data.value === "triangle") {
+        obj = new fabric.Triangle(objectData);
+    } else {
+        obj = new fabric.Rect(objectData);
+    }
 
     return Object.assign(obj, { uuid: data.id });
 }
@@ -125,11 +140,20 @@ export function syncCanvasElementPositionToElement(
         y: canvasElement.top,
         x: canvasElement.left,
         rotation: canvasElement.angle,
-        width: canvasElement.width,
-        height: canvasElement.height,
         scaleX: canvasElement.scaleX,
         scaleY: canvasElement.scaleY,
     });
+
+    if (element.type === "shape" && element.value === "circle") {
+        Object.assign(element.position, {
+            radius: (canvasElement as FabricCircleElement).radius,
+        });
+    } else {
+        Object.assign({
+            width: canvasElement.width,
+            height: canvasElement.height,
+        });
+    }
 }
 
 export function syncCanvasTextToElement(
