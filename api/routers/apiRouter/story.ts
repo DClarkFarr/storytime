@@ -2,10 +2,14 @@ import { Router } from "express";
 import { HasSessionRequest, hasSession } from "../../middleware/hasSession";
 import { ObjectId } from "mongodb";
 import { StoryDocumentSchema } from "../../types/Story";
-import { getStoriesCollection } from "../../db/collections";
+import {
+    getScenesCollection,
+    getStoriesCollection,
+} from "../../db/collections";
 import DbError from "../../errors/DbError";
 import { toStoryObject, populateStoryScenes } from "../../db/story";
 import UserError from "../../errors/UserError";
+import { toSceneObject } from "../../db/scene";
 
 const router = Router();
 
@@ -26,6 +30,33 @@ router.get("/:id", async (req: HasSessionRequest, res) => {
     const populatedStory = await populateStoryScenes(story);
 
     res.json({ row: toStoryObject(populatedStory) });
+});
+
+router.post("/:id/scene", async (req: HasSessionRequest, res) => {
+    const scenesCollection = await getScenesCollection();
+
+    const { insertedId } = await scenesCollection.insertOne({
+        storyId: new ObjectId(req.params.id),
+        userId: req.user._id,
+        name: "New Scene",
+        description: "Description here...",
+        createdAt: new Date(),
+    });
+
+    try {
+        const scene = await scenesCollection.findOne({
+            _id: insertedId,
+            userId: req.user._id,
+        });
+
+        if (!scene) {
+            throw new UserError("Scene not found", 404);
+        }
+
+        res.json({ row: toSceneObject(scene) });
+    } catch (err) {
+        throw new DbError(err.message);
+    }
 });
 
 router.get("/", async (req: HasSessionRequest, res) => {

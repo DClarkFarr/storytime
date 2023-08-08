@@ -16,6 +16,14 @@ const routes = [
         component: () => import("../pages/EditStory.vue"),
     },
     {
+        path: "/story/:storyId/scene/:id",
+        meta: {
+            auth: true,
+        },
+        name: "scene.edit",
+        component: () => import("../pages/EditScene.vue"),
+    },
+    {
         path: "/register",
         component: () => import("../pages/Register.vue"),
         name: "register",
