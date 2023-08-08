@@ -130,20 +130,20 @@ export function useCanvasModule({
     };
 
     const applyListenersToCanvasElement = (canvasElement: FabricObject) => {
-        canvasElement.on("moving", () =>
-            handleCanvasElementEvent("moving", canvasElement)
+        canvasElement.on("moving", (e) =>
+            handleCanvasElementEvent("moving", canvasElement, e)
         );
-        canvasElement.on("modifying", () =>
-            handleCanvasElementEvent("modifying", canvasElement)
+        canvasElement.on("modifying", (e) =>
+            handleCanvasElementEvent("modifying", canvasElement, e)
         );
-        canvasElement.on("scaling", () => {
-            handleCanvasElementEvent("scaling", canvasElement);
+        canvasElement.on("scaling", (e) => {
+            handleCanvasElementEvent("scaling", canvasElement, e);
         });
-        canvasElement.on("rotating", () =>
-            handleCanvasElementEvent("rotating", canvasElement)
+        canvasElement.on("rotating", (e) =>
+            handleCanvasElementEvent("rotating", canvasElement, e)
         );
-        canvasElement.on("changed", () => {
-            handleCanvasElementEvent("changed", canvasElement);
+        canvasElement.on("changed", (e) => {
+            handleCanvasElementEvent("changed", canvasElement, e);
         });
     };
 
@@ -167,10 +167,16 @@ export function useCanvasModule({
     const keyedCanvasChangeDebouncers: {
         [K: string]: (canvasElement: FabricObject) => void;
     } = {};
-    const getCanvasChangeDebouncer = (key: string) => {
-        if (!keyedCanvasChangeDebouncers[key]) {
-            keyedCanvasChangeDebouncers[key] = debounce(
+    const getCanvasChangeDebouncer = (eventType: string) => {
+        if (!keyedCanvasChangeDebouncers[eventType]) {
+            keyedCanvasChangeDebouncers[eventType] = debounce(
                 (canvasElement: FabricObject) => {
+                    if (eventType === "scaling") {
+                        if (canvasElementIsShape(canvasElement)) {
+                            convertScaleToResize(canvasElement);
+                        }
+                    }
+
                     if (typeof onChangeCanvasElement === "function") {
                         onChangeCanvasElement(canvasElement);
                     }
@@ -179,7 +185,7 @@ export function useCanvasModule({
             );
         }
 
-        return keyedCanvasChangeDebouncers[key];
+        return keyedCanvasChangeDebouncers[eventType];
     };
 
     const emitCanvasElementChange = (
@@ -192,7 +198,8 @@ export function useCanvasModule({
 
     const handleCanvasElementEvent = (
         eventType: string,
-        canvasElement: FabricObject
+        canvasElement: FabricObject,
+        event: fabric.IEvent<MouseEvent>
     ) => {
         if (!canvasElement) {
             console.warn(
@@ -201,12 +208,6 @@ export function useCanvasModule({
                     ") -> recevied no canvas element"
             );
             return;
-        }
-
-        if (eventType === "scaling") {
-            if (canvasElementIsShape(canvasElement)) {
-                convertScaleToResize(canvasElement);
-            }
         }
 
         emitCanvasElementChange(eventType, canvasElement);
