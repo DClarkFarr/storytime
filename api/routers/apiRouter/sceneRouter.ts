@@ -71,8 +71,6 @@ router.put("/:id", async (req: HasSessionRequest, res, next) => {
             { returnDocument: "after" }
         );
 
-        console.log("scene", scene);
-
         if (!scene) {
             throw new UserError("Scene not found", 404);
         }

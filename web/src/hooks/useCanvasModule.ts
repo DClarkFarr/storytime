@@ -106,13 +106,13 @@ export function useCanvasModule({
         }
     };
 
-    const addElementsToCanvas = (elements: CanvasElement[]) => {
-        elements.forEach((element) => {
-            addElementToCanvas(element);
-        });
+    const addElementsToCanvas = async (elements: CanvasElement[]) => {
+        await Promise.all(elements.map(addElementToCanvas));
+
+        canvas?.requestRenderAll();
     };
 
-    const addElementToCanvas = (element: CanvasElement) => {
+    const addElementToCanvas = async (element: CanvasElement) => {
         let canvasElement: FabricObject;
 
         if (element.type === "text") {

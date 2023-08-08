@@ -130,11 +130,13 @@ const onReorderList = () => {
     reorderCanvasElements(elementIds);
 };
 
-onMounted(() => {
+onMounted(async () => {
     if (canvasRef.value && canvasContainerRef.value) {
         initialize(canvasRef.value, canvasContainerRef.value);
 
-        addElementsToCanvas(elements.value);
+        await addElementsToCanvas(elements.value);
+
+        computeElementThumbnails();
     } else {
         console.warn("Canvas refs not set");
     }

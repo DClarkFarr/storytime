@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { CanvasElement } from "@/types/Canvas";
 import { SceneWithElements } from "../../types/Scene";
 import { ref } from "vue";
 import { debounce } from "lodash-es";
