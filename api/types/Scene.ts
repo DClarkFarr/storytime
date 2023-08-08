@@ -5,6 +5,7 @@ export interface SceneDocumentSchema extends Document {
     userId: ObjectId;
     name: string;
     description: string;
+    elements: object[];
     createdAt: Date;
 }
 

@@ -40,6 +40,7 @@ router.post("/:id/scene", async (req: HasSessionRequest, res) => {
         userId: req.user._id,
         name: "New Scene",
         description: "Description here...",
+        elements: [],
         createdAt: new Date(),
     });
 
