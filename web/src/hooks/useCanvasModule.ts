@@ -234,6 +234,34 @@ export function useCanvasModule({
         canvas?.requestRenderAll();
     };
 
+    const clearSelection = () => {
+        canvas?.discardActiveObject().renderAll();
+    };
+
+    const selectElementsByUUIDs = (uuids: string[]) => {
+        console.log("trying to select", uuids);
+        setSelectedUUIDs(uuids);
+        selectCanvasElementsByUUIDs(uuids);
+    };
+
+    const selectCanvasElementsByUUIDs = (uuids: string[]) => {
+        const toSelect = (canvas?.getObjects() as FabricObject[]).filter(
+            (obj) => {
+                return uuids.includes(obj.uuid);
+            }
+        );
+
+        canvas?.discardActiveObject();
+
+        var sel = new fabric.ActiveSelection(toSelect, {
+            canvas: canvas as fabric.Canvas,
+        });
+
+        canvas?.setActiveObject(sel);
+
+        canvas?.requestRenderAll();
+    };
+
     const getCanvas = () => canvas;
     const getCanvasElements = () => canvasElements;
 
@@ -258,5 +286,7 @@ export function useCanvasModule({
         addElementToCanvas,
         applyListenersToCanvasElement,
         reorderCanvasElements,
+        clearSelection,
+        selectElementsByUUIDs,
     };
 }

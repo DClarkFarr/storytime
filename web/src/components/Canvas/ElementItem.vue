@@ -13,7 +13,7 @@ props;
 
 <template>
     <div
-        class="element-item px-4 py-2 bg-white border rounded-md"
+        class="element-item px-4 py-2 bg-white border rounded-md cursor-pointer"
         :class="{
             'border-slate-500': !selected,
             'border-sky-500': selected,
@@ -21,7 +21,7 @@ props;
             'element-item--edit': edit,
         }"
     >
-        <div class="flex items-center gap-x-2">
+        <div class="flex items-center gap-x-2 select-none">
             <div
                 class="element-item__thumbnail flex align-center"
                 v-if="thumbnail"

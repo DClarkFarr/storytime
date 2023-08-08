@@ -4,7 +4,7 @@ import {
     CanvasElementTypes,
     CanvasShapeTypes,
 } from "@/types/Canvas";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, toValue, watch } from "vue";
 import {
     createTextElement,
     createShapeElement,
@@ -105,6 +105,7 @@ const {
     addElementToCanvas,
     findElementById,
     reorderCanvasElements,
+    selectElementsByUUIDs,
     selectedUUIDs,
 } = useCanvasModule({
     onChangeCanvasElement: (canvasElement) => {
@@ -130,11 +131,35 @@ const onReorderList = () => {
     reorderCanvasElements(elementIds);
 };
 
+const onSelectElement = (element: CanvasElement) => {
+    if (
+        selectedUUIDs.value.length === 1 &&
+        selectedUUIDs.value[0] === element.id
+    ) {
+        return selectElementsByUUIDs([]);
+    }
+    selectElementsByUUIDs([element.id]);
+};
+
+const onSelectAdditionalElement = (element: CanvasElement) => {
+    if (!selectedUUIDs.value.includes(element.id)) {
+        selectElementsByUUIDs([...selectedUUIDs.value, element.id]);
+    }
+};
+
+const handleItemSelect = (e: MouseEvent, element: CanvasElement) => {
+    if (e.shiftKey) {
+        onSelectAdditionalElement(element);
+    } else {
+        onSelectElement(element);
+    }
+};
+
 onMounted(async () => {
     if (canvasRef.value && canvasContainerRef.value) {
         initialize(canvasRef.value, canvasContainerRef.value);
 
-        await addElementsToCanvas(elements.value);
+        await addElementsToCanvas([...elements.value].reverse());
 
         computeElementThumbnails();
     } else {
@@ -202,6 +227,7 @@ onMounted(async () => {
                 >
                     <ElementItem
                         v-for="element in elements"
+                        @click.native="(e) => handleItemSelect(e, element)"
                         :edit="editItemId === element.id"
                         :element="element"
                         :selected="selectedUUIDs.includes(element.id)"
