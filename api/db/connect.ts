@@ -1,4 +1,4 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { Db, MongoClient, ServerApiVersion } from "mongodb";
 
 import { env } from "../app/Environment";
 import { Document } from "mongodb";
@@ -13,8 +13,30 @@ const client = new MongoClient(env.MONGO_URL, {
     // },
 });
 
-async function applyIndexes() {
-    const db = await getDb();
+async function registerStoryIndexes(db: Db) {
+    try {
+        await db.createCollection("stories", {});
+        console.log("created collection stories");
+    } catch {}
+
+    const storiesCollection = db.collection("stories");
+
+    const storyIndexes = {
+        userId: false,
+    };
+
+    const indexes = await storiesCollection.listIndexes().toArray();
+
+    for (let index of indexes) {
+        storyIndexes[index.name] = true;
+    }
+
+    if (!storyIndexes.userId) {
+        await storiesCollection.createIndex({ userId: 1 }, { name: "email" });
+    }
+}
+
+async function registerUserIndexes(db: Db) {
     try {
         await db.createCollection("users", {});
         console.log("created collection users");
@@ -38,6 +60,41 @@ async function applyIndexes() {
             { unique: true, name: "email" }
         );
     }
+}
+
+async function registerSceneIndexes(db: Db) {
+    try {
+        await db.createCollection("scenes", {});
+        console.log("created collection scenes");
+    } catch {}
+
+    const scenesCollection = db.collection("scenes");
+
+    const sceneIndexes = {
+        userId: false,
+        storyId: false,
+    };
+
+    const indexes = await scenesCollection.listIndexes().toArray();
+
+    for (let index of indexes) {
+        sceneIndexes[index.name] = true;
+    }
+
+    if (!sceneIndexes.userId) {
+        await scenesCollection.createIndex({ userId: 1 }, { name: "email" });
+    }
+    if (!sceneIndexes.storyId) {
+        await scenesCollection.createIndex({ storyId: 1 }, { name: "storyId" });
+    }
+}
+
+async function applyIndexes() {
+    const db = await getDb();
+
+    registerUserIndexes(db);
+    registerStoryIndexes(db);
+    registerSceneIndexes(db);
 }
 
 async function initializeDb() {

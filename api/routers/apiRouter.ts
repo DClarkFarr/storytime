@@ -4,11 +4,13 @@ import DbError from "../errors/DbError";
 
 import authRouter from "./apiRouter/auth";
 import userRouter from "./apiRouter/user";
+import storyRouter from "./apiRouter/story";
 
 const router = Router();
 
 router.use("/auth", authRouter);
 router.use("/user", userRouter);
+router.use("/story", storyRouter);
 
 router.get("/", (req, res) => {
     res.json({ message: "Hello, world!" });

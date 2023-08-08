@@ -1,9 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { getUsersCollection } from "../db/collections";
+import { UserDocument } from "../types/User";
 import { ObjectId } from "mongodb";
 
+export type HasSessionRequest = Request & { user: UserDocument };
+
 export async function hasSession(
-    req: Request,
+    req: HasSessionRequest,
     res: Response,
     next: NextFunction
 ) {
@@ -16,6 +19,9 @@ export async function hasSession(
         if (!user) {
             return res.status(401).json({ message: "Unauthorized" });
         }
+
+        req.user = user;
+
         next();
     } else {
         res.status(401).json({ message: "Unauthorized" });

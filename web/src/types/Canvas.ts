@@ -2,7 +2,6 @@ import { fabric } from "fabric";
 
 export interface CanvasBaseElement {
     id: string;
-    index: number;
     type: string;
     position: {
         x: number;

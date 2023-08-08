@@ -10,13 +10,13 @@ import {
     FabricTextElement,
     FabricTriangleElement,
 } from "@/types/Canvas";
+
 import { v4 as uuidv4 } from "uuid";
 import { fabric } from "fabric";
 
 export function createTextElement(): CanvasTextElement {
     return {
         id: uuidv4(),
-        index: -1,
         type: "text",
         position: {
             x: 0,
@@ -40,7 +40,6 @@ export function createShapeElement(
 ): CanvasShapeElement {
     return {
         id: uuidv4(),
-        index: -1,
         type: "shape",
         value,
         position: {

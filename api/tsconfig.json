@@ -9,5 +9,6 @@
         "rootDir": ".",
         "types": ["./types.d.ts"]
     },
+
     "lib": ["es2015"]
 }

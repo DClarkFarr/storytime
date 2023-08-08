@@ -8,6 +8,7 @@ const props = defineProps<{
     selected: boolean;
     edit: boolean;
 }>();
+props;
 </script>
 
 <template>

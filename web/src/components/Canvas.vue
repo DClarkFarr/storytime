@@ -4,7 +4,7 @@ import {
     CanvasElementTypes,
     CanvasShapeTypes,
 } from "@/types/Canvas";
-import { computed, onMounted, ref, toRef, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import {
     createTextElement,
     createShapeElement,

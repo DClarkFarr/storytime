@@ -236,8 +236,10 @@ export function useCanvasModule({
     const getCanvas = () => canvas;
     const getCanvasElements = () => canvasElements;
 
-    const findElementById = (id: string): FabricObject => {
-        return canvasElements.find((element) => element.uuid === id);
+    const findElementById = (id: string) => {
+        return canvasElements.find(
+            (element) => element.uuid === id
+        ) as FabricObject;
     };
 
     return {
