@@ -4,7 +4,7 @@ import {
     CanvasElementTypes,
     CanvasShapeTypes,
 } from "@/types/Canvas";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, toRef, watch } from "vue";
 import {
     createTextElement,
     createShapeElement,
@@ -17,6 +17,8 @@ import { useCanvasModule } from "@/hooks/useCanvasModule";
 import { keyBy } from "lodash-es";
 
 import ElementItem from "./Canvas/ElementItem.vue";
+
+import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
@@ -33,6 +35,13 @@ const props = withDefaults(
     }
 );
 
+const elements = computed<CanvasElement[]>({
+    get: () => props.elements,
+    set: (val) => {
+        emit("update:elements", val);
+    },
+});
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvasContainerRef = ref<HTMLDivElement | null>(null);
 
@@ -41,15 +50,6 @@ const computedStyles = computed(() => {
         "max-width": props.width ? `${props.width}px` : "100%",
     };
 });
-
-// const elements = computed({
-//     get: () => props.elements,
-//     set: (val) => {
-//         emit("update:elements", val);
-//     },
-// });
-
-const elements = computed(() => props.elements);
 
 const elementThumbnails = ref<Record<string, string | undefined>>({});
 
@@ -103,6 +103,7 @@ const {
     addElementsToCanvas,
     addElementToCanvas,
     findElementById,
+    reorderCanvasElements,
     selectedUUIDs,
 } = useCanvasModule({
     onChangeCanvasElement: (canvasElement) => {
@@ -122,6 +123,11 @@ const editItemId = computed(() => {
 
     return null;
 });
+
+const onReorderList = () => {
+    const elementIds = elements.value.map((element) => element.id);
+    reorderCanvasElements(elementIds);
+};
 
 onMounted(() => {
     if (canvasRef.value && canvasContainerRef.value) {
@@ -184,14 +190,22 @@ onMounted(() => {
                 </Dropdown>
             </div>
             <div class="canvas__elements">
-                <ElementItem
-                    v-for="element in elements"
-                    :edit="editItemId === element.id"
-                    :element="element"
-                    :selected="selectedUUIDs.includes(element.id)"
-                    :thumbnail="elementThumbnails[element.id]"
-                    :key="element.id"
-                />
+                <Draggable
+                    v-model="elements"
+                    group="elements"
+                    draggable=".element-item"
+                    handle=".action--handle"
+                    @end="onReorderList"
+                >
+                    <ElementItem
+                        v-for="element in elements"
+                        :edit="editItemId === element.id"
+                        :element="element"
+                        :selected="selectedUUIDs.includes(element.id)"
+                        :thumbnail="elementThumbnails[element.id]"
+                        :key="element.id"
+                    />
+                </Draggable>
             </div>
         </div>
         <div
@@ -208,7 +222,7 @@ onMounted(() => {
     </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .canvas {
     &__container {
         aspect-ratio: 16 / 9;
@@ -217,6 +231,12 @@ onMounted(() => {
 
         canvas {
             aspect-ratio: 16 / 9;
+        }
+    }
+
+    &__elements {
+        :deep(> div[group="elements"]) {
+            @apply flex flex-col gap-y-1;
         }
     }
 }

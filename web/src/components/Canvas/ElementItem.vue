@@ -32,7 +32,7 @@ const props = defineProps<{
             </div>
             <div class="element-item__actions ml-auto flex gap-x-2">
                 <div>
-                    <button class="action">
+                    <button class="action action--handle">
                         <IconBars class="text-sm" />
                     </button>
                 </div>

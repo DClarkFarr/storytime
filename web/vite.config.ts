@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
-import vue from "@vitejs/plugin-vue";
+import Vue from "@vitejs/plugin-vue";
 import { fileURLToPath, URL } from "url";
 import Icons from "unplugin-icons/vite";
 
@@ -12,7 +12,7 @@ export default ({ mode }) => {
 
     return defineConfig({
         plugins: [
-            vue(),
+            Vue({}),
             Icons({
                 compiler: "vue3",
             }),

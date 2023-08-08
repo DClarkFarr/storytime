@@ -212,10 +212,31 @@ export function useCanvasModule({
         emitCanvasElementChange(eventType, canvasElement);
     };
 
+    const reorderCanvasElements = (uuids: string[]) => {
+        const newArr: FabricObject[] = [];
+        uuids.forEach((uuid, index) => {
+            const canvasElement = findElementById(uuid);
+            if (!canvasElement) {
+                console.warn(
+                    "reorderCanvasElements -> could not find element with uuid",
+                    uuid
+                );
+                return;
+            }
+
+            newArr.push(canvasElement);
+            canvasElement.moveTo(index);
+        });
+
+        canvasElements = newArr;
+
+        canvas?.requestRenderAll();
+    };
+
     const getCanvas = () => canvas;
     const getCanvasElements = () => canvasElements;
 
-    const findElementById = (id: string) => {
+    const findElementById = (id: string): FabricObject => {
         return canvasElements.find((element) => element.uuid === id);
     };
 
@@ -233,5 +254,6 @@ export function useCanvasModule({
         addElementsToCanvas,
         addElementToCanvas,
         applyListenersToCanvasElement,
+        reorderCanvasElements,
     };
 }
