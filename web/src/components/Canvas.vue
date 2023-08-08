@@ -63,10 +63,11 @@ const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
         throw new Error("Unknown layer type: " + type);
     }
 
-    element.index = elements.value.length;
-    elements.value.push(element);
+    elements.value.unshift(element);
 
     addElementToCanvas(element);
+
+    getCanvas()?.requestRenderAll();
 
     emit("update:elements", elements.value);
 };
@@ -125,7 +126,7 @@ const editItemId = computed(() => {
 });
 
 const onReorderList = () => {
-    const elementIds = elements.value.map((element) => element.id);
+    const elementIds = elements.value.map((element) => element.id).reverse();
     reorderCanvasElements(elementIds);
 };
 
