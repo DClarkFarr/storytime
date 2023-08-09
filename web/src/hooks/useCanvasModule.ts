@@ -25,6 +25,7 @@ export function useCanvasModule({
     let canvasElements: FabricObject[] = [];
 
     const selectedUUIDs = ref<string[]>([]);
+    const editUUID = ref<string | null>(null);
 
     const setCanvas = (canvasNode: HTMLCanvasElement) => {
         canvas = new fabric.Canvas(canvasNode, {
@@ -114,6 +115,9 @@ export function useCanvasModule({
 
     const setSelectedUUIDs = (ids: string[]) => {
         selectedUUIDs.value = ids;
+    };
+    const setEditUUID = (id: string | null) => {
+        editUUID.value = id;
     };
 
     const initialize = (
@@ -334,8 +338,10 @@ export function useCanvasModule({
     };
     return {
         selectedUUIDs,
+        editUUID,
         findElementById,
         setSelectedUUIDs,
+        setEditUUID,
         getCanvas,
         getCanvasElements,
         setCanvas,

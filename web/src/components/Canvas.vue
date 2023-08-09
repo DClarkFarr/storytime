@@ -20,6 +20,7 @@ import ElementItem from "./Canvas/ElementItem.vue";
 
 import { VueDraggableNext as Draggable } from "vue-draggable-next";
 import { createImageElement } from "@/methods/canvas";
+import ElementForm from "./Canvas/ElementForm.vue";
 
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
@@ -109,7 +110,9 @@ const {
     findElementById,
     reorderCanvasElements,
     selectElementsByUUIDs,
+    setEditUUID,
     selectedUUIDs,
+    editUUID,
 } = useCanvasModule({
     onChangeCanvasElement: (canvasElement) => {
         syncCanvasElementToElement(
@@ -128,14 +131,6 @@ const {
             emit("update:elements", elements.value);
         }
     },
-});
-
-const editItemId = computed(() => {
-    if (selectedUUIDs.value.length === 1) {
-        return selectedUUIDs.value[0];
-    }
-
-    return null;
 });
 
 const onReorderList = () => {
@@ -165,6 +160,19 @@ const handleItemSelect = (e: MouseEvent, element: CanvasElement) => {
     } else {
         onSelectElement(element);
     }
+};
+
+const onEditElement = (element: CanvasElement | null) => {
+    if (element) {
+        onSelectElement(element);
+        setEditUUID(element.id);
+    } else {
+        setEditUUID(null);
+    }
+};
+
+const onUpdateElement = (element: CanvasElement) => {
+    console.log("got element", element);
 };
 
 onMounted(async () => {
@@ -259,13 +267,19 @@ onMounted(async () => {
                 >
                     <ElementItem
                         v-for="element in elements"
-                        @click.native="(e) => handleItemSelect(e, element)"
-                        :edit="editItemId === element.id"
+                        @click.native="(e: MouseEvent) => handleItemSelect(e, element)"
+                        :edit="editUUID === element.id"
                         :element="element"
                         :selected="selectedUUIDs.includes(element.id)"
                         :thumbnail="elementThumbnails[element.id]"
                         :key="element.id"
-                    />
+                        @edit="onEditElement"
+                    >
+                        <ElementForm
+                            :element="element"
+                            @update="onUpdateElement"
+                        />
+                    </ElementItem>
                 </Draggable>
             </div>
         </div>
