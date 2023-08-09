@@ -1,14 +1,16 @@
 <script lang="ts" setup>
+import { fabric } from "fabric";
 import {
     CanvasElement,
     CanvasElementTypes,
     CanvasShapeTypes,
 } from "@/types/Canvas";
-import { computed, onMounted, ref, toValue, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import {
     createTextElement,
     createShapeElement,
     syncCanvasElementToElement,
+    syncElementToCanvasElement,
 } from "@/methods/canvas";
 
 import Dropdown from "./controls/Dropdown.vue";
@@ -164,15 +166,23 @@ const handleItemSelect = (e: MouseEvent, element: CanvasElement) => {
 
 const onEditElement = (element: CanvasElement | null) => {
     if (element) {
-        onSelectElement(element);
+        selectElementsByUUIDs([element.id]);
         setEditUUID(element.id);
     } else {
         setEditUUID(null);
     }
 };
 
-const onUpdateElement = (element: CanvasElement) => {
-    console.log("got element", element);
+const onUpdateElement = async (element: CanvasElement) => {
+    const canvasElement = findElementById(element.id);
+
+    if (getCanvas()?.getActiveObject() instanceof fabric.ActiveSelection) {
+        selectElementsByUUIDs([element.id]);
+    }
+
+    await syncElementToCanvasElement(element, canvasElement);
+
+    getCanvas()?.requestRenderAll();
 };
 
 onMounted(async () => {
@@ -267,7 +277,7 @@ onMounted(async () => {
                 >
                     <ElementItem
                         v-for="element in elements"
-                        @click.native="(e: MouseEvent) => handleItemSelect(e, element)"
+                        @click="handleItemSelect"
                         :edit="editUUID === element.id"
                         :element="element"
                         :selected="selectedUUIDs.includes(element.id)"

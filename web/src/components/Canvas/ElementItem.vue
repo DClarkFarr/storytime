@@ -7,6 +7,7 @@ import IconMinus from "~icons/fa6-solid/minus";
 
 const emit = defineEmits<{
     edit: [element: CanvasElement | null];
+    click: [e: MouseEvent, element: CanvasElement];
 }>();
 
 const props = defineProps<{
@@ -23,6 +24,10 @@ const onClickEdit = () => {
 const onClickClose = () => {
     emit("edit", null);
 };
+
+const onClickHeading = (e: MouseEvent) => {
+    emit("click", e, props.element);
+};
 </script>
 
 <template>
@@ -35,7 +40,10 @@ const onClickClose = () => {
             'element-item--edit': edit,
         }"
     >
-        <div class="flex items-center gap-x-2 select-none">
+        <div
+            class="element-item__heading flex items-center gap-x-2 select-none"
+            @click="onClickHeading"
+        >
             <div
                 class="element-item__thumbnail flex align-center"
                 v-if="thumbnail && thumbnail.length > 6"
@@ -69,7 +77,7 @@ const onClickClose = () => {
                 </div>
             </div>
         </div>
-        <div class="element-type__form pt-2" v-if="edit">
+        <div class="element-item__form pt-2" v-if="edit">
             <slot></slot>
         </div>
     </div>

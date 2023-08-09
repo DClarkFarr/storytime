@@ -82,9 +82,16 @@ export interface FabricRectElement extends fabric.Rect {
 export interface FabricCircleElement extends fabric.Circle {
     uuid: string;
 }
+
 export interface FabricTriangleElement extends fabric.Triangle {
     uuid: string;
 }
+
+export type FabricShapeElement =
+    | FabricRectElement
+    | FabricCircleElement
+    | FabricTriangleElement;
+
 export interface FabricObject extends fabric.Object {
     uuid: string;
 }

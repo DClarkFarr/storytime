@@ -305,11 +305,15 @@ export function useCanvasModule({
 
         canvas?.discardActiveObject();
 
-        var sel = new fabric.ActiveSelection(toSelect, {
-            canvas: canvas as fabric.Canvas,
-        });
-
-        canvas?.setActiveObject(sel);
+        if (toSelect.length === 1) {
+            canvas?.setActiveObject(toSelect[0]);
+        } else if (toSelect.length > 0) {
+            canvas?.setActiveObject(
+                new fabric.ActiveSelection(toSelect, {
+                    canvas: canvas as fabric.Canvas,
+                })
+            );
+        }
 
         canvas?.requestRenderAll();
     };

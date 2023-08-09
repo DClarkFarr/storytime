@@ -9,6 +9,7 @@ import {
     FabricImageElement,
     FabricObject,
     FabricRectElement,
+    FabricShapeElement,
     FabricTextElement,
     FabricTriangleElement,
 } from "@/types/Canvas";
@@ -309,5 +310,153 @@ export function syncCanvasElementToElement(
         syncCanvasImageToElement(canvasElement as FabricImageElement, element);
     } else {
         throw new Error("Unknown element type: " + element.type);
+    }
+}
+
+export function syncElementPositionToCanvasElement(
+    element: CanvasElement,
+    canvasElement: FabricObject
+) {
+    const mappedPosition = mapElementPositionToCanvasElement(element.position);
+
+    delete mappedPosition.width;
+    delete mappedPosition.height;
+    delete mappedPosition.radius;
+
+    const posiionChanges = Object.entries(mappedPosition).reduce(
+        (acc, [key, value]) => {
+            if (canvasElement[key as keyof typeof canvasElement] !== value) {
+                acc[key as keyof typeof mappedPosition] = value;
+            }
+            return acc;
+        },
+        {} as Partial<typeof mappedPosition>
+    );
+
+    if (Object.keys(posiionChanges).length > 0) {
+        console.log(
+            "got changes",
+            posiionChanges,
+            "from",
+            canvasElement.top,
+            "and left",
+            canvasElement.left
+        );
+        canvasElement.set(posiionChanges);
+        canvasElement.setCoords();
+    }
+}
+
+export function syncElementSelectableToCanvasElement(
+    element: CanvasElement,
+    canvasElement: FabricObject
+) {
+    if (element.selectable != canvasElement.selectable) {
+        canvasElement.set({
+            selectable: element.selectable,
+            evented: element.selectable,
+        });
+    }
+}
+
+export function syncElementOpacityToCanvasElement(
+    element: CanvasElement,
+    canvasElement: FabricObject
+) {
+    if (element.opacity != canvasElement.opacity) {
+        canvasElement.set({ opacity: element.opacity });
+    }
+}
+
+export async function syncElementToCanvasElement(
+    element: CanvasElement,
+    canvasElement: FabricObject
+) {
+    syncElementPositionToCanvasElement(element, canvasElement);
+    syncElementSelectableToCanvasElement(element, canvasElement);
+    syncElementOpacityToCanvasElement(element, canvasElement);
+
+    if (element.type === "text") {
+        await syncElementTextToCanvasElement(
+            element,
+            canvasElement as FabricTextElement
+        );
+    } else if (element.type === "shape") {
+        await syncElementShapeToCanvasElement(
+            element,
+            canvasElement as FabricShapeElement
+        );
+    } else if (element.type === "image") {
+        await syncElementImageToCanvasElement(
+            element,
+            canvasElement as FabricImageElement
+        );
+    } else {
+        throw new Error("Unknown element type: " + element.type);
+    }
+
+    console.log(
+        "after syncing we got top",
+        canvasElement.top,
+        "and left",
+        canvasElement.left
+    );
+}
+
+export async function syncElementTextToCanvasElement(
+    element: CanvasTextElement,
+    canvasElement: FabricTextElement
+) {
+    canvasElement.set({
+        text: element.value,
+        fontSize: element.font.size,
+        fontWeight: element.font.weight,
+        fontFamily: element.font.family,
+        fill: element.font.color,
+    });
+}
+export async function syncElementShapeToCanvasElement(
+    element: CanvasShapeElement,
+    canvasElement: FabricShapeElement
+) {
+    if (element.value === "circle") {
+        (canvasElement as FabricCircleElement).set({
+            radius: element.position.radius,
+        });
+    } else {
+        (canvasElement as FabricRectElement | FabricTriangleElement).set({
+            height: element.position.height,
+            width: element.position.width,
+        });
+    }
+
+    (canvasElement as fabric.Object).set({
+        backgroundColor: element.shape.background,
+        fill: element.shape.fill,
+        stroke: element.shape.stroke,
+        strokeWidth: element.shape.strokeWidth,
+    });
+}
+export async function syncElementImageToCanvasElement(
+    element: CanvasImageElement,
+    canvasElement: FabricImageElement
+) {
+    canvasElement.set({
+        backgroundColor: element.image.backgroundColor,
+    });
+
+    if (element.value != canvasElement.getSrc()) {
+        console.log("setting new src", element.value);
+
+        await new Promise((resolve) => {
+            canvasElement.setSrc(
+                element.value,
+                () => {
+                    canvasElement.setCoords();
+                    resolve(null);
+                },
+                { crossOrigin: "anonymous" }
+            );
+        });
     }
 }
