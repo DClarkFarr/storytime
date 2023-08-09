@@ -2,7 +2,8 @@
 import { CanvasElement } from "@/types/Canvas";
 import IconBars from "~icons/fa6-solid/bars";
 import IconPencil from "~icons/fa6-solid/pencil";
-import IconEyeSlash from "~icons/fa6-solid/eye-slash";
+// import IconEyeSlash from "~icons/fa6-solid/eye-slash";
+import IconMinus from "~icons/fa6-solid/minus";
 
 const emit = defineEmits<{
     edit: [element: CanvasElement | null];
@@ -58,7 +59,7 @@ const onClickClose = () => {
                         @click.prevent.stop="onClickClose"
                         class="action action--close"
                     >
-                        <IconEyeSlash class="text-xs" />
+                        <IconMinus class="text-xs" />
                     </button>
                 </div>
                 <div>
@@ -68,7 +69,7 @@ const onClickClose = () => {
                 </div>
             </div>
         </div>
-        <div class="element-type__form" v-if="edit">
+        <div class="element-type__form pt-2" v-if="edit">
             <slot></slot>
         </div>
     </div>
