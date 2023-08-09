@@ -5,6 +5,7 @@ import { CanvasElement, FabricObject } from "@/types/Canvas";
 import {
     createShapeCanvasElement,
     createTextCanvasElement,
+    createImageCanvasElement,
 } from "@/methods/canvas";
 import { useMagicKeys } from "@vueuse/core";
 import { ref, watch } from "vue";
@@ -134,7 +135,9 @@ export function useCanvasModule({
     };
 
     const addElementsToCanvas = async (elements: CanvasElement[]) => {
-        await Promise.all(elements.map(addElementToCanvas));
+        for (let i in elements) {
+            await addElementToCanvas(elements[i]);
+        }
 
         canvas?.requestRenderAll();
     };
@@ -143,9 +146,11 @@ export function useCanvasModule({
         let canvasElement: FabricObject;
 
         if (element.type === "text") {
-            canvasElement = createTextCanvasElement(element);
+            canvasElement = await createTextCanvasElement(element);
         } else if (element.type === "shape") {
-            canvasElement = createShapeCanvasElement(element);
+            canvasElement = await createShapeCanvasElement(element);
+        } else if (element.type === "image") {
+            canvasElement = await createImageCanvasElement(element);
         } else {
             throw new Error("Unknown element type: " + element.type);
         }

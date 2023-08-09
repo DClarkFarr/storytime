@@ -30,6 +30,7 @@ export interface CanvasImageElement extends CanvasBaseElement {
     type: "image";
     image: {
         alt: string;
+        backgroundColor: string;
     };
     value: string;
 }

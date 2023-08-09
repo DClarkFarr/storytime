@@ -1,10 +1,12 @@
 import {
     CanvasBaseElement,
     CanvasElement,
+    CanvasImageElement,
     CanvasShapeElement,
     CanvasShapeTypes,
     CanvasTextElement,
     FabricCircleElement,
+    FabricImageElement,
     FabricObject,
     FabricRectElement,
     FabricTextElement,
@@ -32,6 +34,27 @@ export function createTextElement(): CanvasTextElement {
             weight: "normal",
         },
         value: "Text string",
+    };
+}
+
+export function createImageElement(): CanvasImageElement {
+    return {
+        id: uuidv4(),
+        type: "image",
+        position: {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            height: 100,
+            width: 100,
+        },
+        image: {
+            alt: "",
+            backgroundColor: "lightblue",
+        },
+        opacity: 1,
+        selectable: true,
+        value: import.meta.env.VITE_API_BASE + "/placeholder.jpg",
     };
 }
 
@@ -89,16 +112,15 @@ export function mapElementGenericFieldsToCanvasElement(
     };
 }
 
-export function createShapeCanvasElement(
+export async function createShapeCanvasElement(
     data: CanvasShapeElement
-): FabricRectElement {
+): Promise<FabricRectElement> {
     const objectData = {
         ...mapElementPositionToCanvasElement(data.position),
         ...mapElementGenericFieldsToCanvasElement(data),
         fill: data.shape.fill,
         stroke: data.shape.stroke,
         strokeWidth: data.shape.strokeWidth,
-        // backgroundColor: data.shape.background,
     };
 
     let obj: fabric.Object;
@@ -113,9 +135,9 @@ export function createShapeCanvasElement(
     return Object.assign(obj, { uuid: data.id });
 }
 
-export function createTextCanvasElement(
+export async function createTextCanvasElement(
     data: CanvasTextElement
-): FabricTextElement {
+): Promise<FabricTextElement> {
     const obj = new fabric.IText(data.value, {
         ...mapElementPositionToCanvasElement(data.position),
         ...mapElementGenericFieldsToCanvasElement(data),
@@ -128,9 +150,67 @@ export function createTextCanvasElement(
     return Object.assign(obj, { uuid: data.id });
 }
 
-export function createImageElement() {}
+export function getImageLayout(
+    width: number = 0,
+    height: number = 0
+): "landscape" | "portrait" | "square" {
+    if (width > height) {
+        return "landscape";
+    } else if (height > width) {
+        return "portrait";
+    } else {
+        return "square";
+    }
+}
+export async function createImageCanvasElement(
+    data: CanvasImageElement
+): Promise<FabricImageElement> {
+    const imgElement = await new Promise<HTMLImageElement>((resolve) => {
+        fabric.util.loadImage(
+            data.value,
+            (img) => {
+                resolve(img);
+            },
+            null,
+            "anonymous"
+        );
+    });
 
-export function createDrawElement() {}
+    let img: fabric.Image;
+
+    if (imgElement) {
+        const { height, width } = data.position;
+        delete data.position.height;
+        delete data.position.width;
+
+        img = new fabric.Image(imgElement, {
+            ...mapElementPositionToCanvasElement(data.position),
+            ...mapElementGenericFieldsToCanvasElement(data),
+            backgroundColor: data.image.backgroundColor,
+        });
+
+        if (height) {
+            img.scaleToHeight(height);
+        }
+        if (width) {
+            img.scaleToWidth(width);
+        }
+    } else {
+        img = new fabric.Image("", {
+            ...mapElementPositionToCanvasElement({
+                ...data.position,
+                height: 100,
+                width: 100,
+            }),
+            ...mapElementGenericFieldsToCanvasElement(data),
+            backgroundColor: data.image.backgroundColor,
+        });
+    }
+
+    return Object.assign(img, { uuid: data.id });
+}
+
+export async function createDrawElement() {}
 
 export function syncCanvasElementPositionToElement(
     canvasElement: FabricObject,
@@ -204,6 +284,17 @@ export function syncCanvasShapeToElement(
     element.value = getCanvasElementShapeType(canvasElement);
 }
 
+export function syncCanvasImageToElement(
+    canvasElement: FabricImageElement,
+    element: CanvasImageElement
+) {
+    Object.assign(element.image, {
+        backgroundColor: canvasElement.backgroundColor,
+    });
+
+    element.value = canvasElement.getSrc() || "";
+}
+
 export function syncCanvasElementToElement(
     canvasElement: FabricObject,
     element: CanvasElement
@@ -214,5 +305,9 @@ export function syncCanvasElementToElement(
         syncCanvasTextToElement(canvasElement as FabricTextElement, element);
     } else if (element.type === "shape") {
         syncCanvasShapeToElement(canvasElement as FabricRectElement, element);
+    } else if (element.type === "image") {
+        syncCanvasImageToElement(canvasElement as FabricImageElement, element);
+    } else {
+        throw new Error("Unknown element type: " + element.type);
     }
 }

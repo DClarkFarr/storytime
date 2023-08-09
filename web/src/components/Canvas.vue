@@ -19,6 +19,7 @@ import { keyBy } from "lodash-es";
 import ElementItem from "./Canvas/ElementItem.vue";
 
 import { VueDraggableNext as Draggable } from "vue-draggable-next";
+import { createImageElement } from "@/methods/canvas";
 
 const emit = defineEmits<{
     (e: "update:elements", val: CanvasElement[]): void;
@@ -53,19 +54,21 @@ const computedStyles = computed(() => {
 
 const elementThumbnails = ref<Record<string, string | undefined>>({});
 
-const onAddLayer = (type: CanvasElementTypes, alt?: string) => {
+const onAddLayer = async (type: CanvasElementTypes, alt?: string) => {
     let element: CanvasElement;
     if (type === "text") {
         element = createTextElement();
     } else if (type === "shape" && alt) {
         element = createShapeElement(alt as CanvasShapeTypes);
+    } else if (type === "image") {
+        element = createImageElement();
     } else {
         throw new Error("Unknown layer type: " + type);
     }
 
     elements.value.unshift(element);
 
-    addElementToCanvas(element);
+    await addElementToCanvas(element);
 
     getCanvas()?.requestRenderAll();
 
