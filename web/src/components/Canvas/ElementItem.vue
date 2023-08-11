@@ -32,12 +32,14 @@ const onClickHeading = (e: MouseEvent) => {
 
 <template>
     <div
-        class="element-item px-4 py-2 bg-white border rounded-md cursor-pointer"
+        class="element-item px-4 py-2 border rounded-md cursor-pointer"
         :class="{
             'border-slate-500': !selected,
             'border-sky-500': selected,
             'element-item--selected': selected,
             'element-item--edit': edit,
+            'bg-white': element.selectable,
+            'bg-gray-200': !element.selectable,
         }"
     >
         <div

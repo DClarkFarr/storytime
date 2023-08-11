@@ -161,6 +161,9 @@ const onSelectAdditionalElement = (element: CanvasElement) => {
 };
 
 const handleItemSelect = (e: MouseEvent, element: CanvasElement) => {
+    if (!element.selectable) {
+        return false;
+    }
     if (e.shiftKey) {
         onSelectAdditionalElement(element);
     } else {
@@ -170,7 +173,11 @@ const handleItemSelect = (e: MouseEvent, element: CanvasElement) => {
 
 const onEditElement = (element: CanvasElement | null) => {
     if (element) {
-        selectElementsByUUIDs([element.id]);
+        if (element.selectable) {
+            selectElementsByUUIDs([element.id]);
+        } else {
+            selectElementsByUUIDs([]);
+        }
         setEditUUID(element.id);
     } else {
         setEditUUID(null);
@@ -180,6 +187,9 @@ const onEditElement = (element: CanvasElement | null) => {
 const onUpdateElement = async (element: CanvasElement) => {
     const canvasElement = findElementById(element.id);
 
+    if (!element.selectable && selectedUUIDs.value.includes(element.id)) {
+        selectElementsByUUIDs([]);
+    }
     if (getCanvas()?.getActiveObject() instanceof fabric.ActiveSelection) {
         selectElementsByUUIDs([element.id]);
     }
@@ -187,6 +197,9 @@ const onUpdateElement = async (element: CanvasElement) => {
     await syncElementToCanvasElement(element, canvasElement);
 
     getCanvas()?.requestRenderAll();
+
+    const index = elements.value.findIndex((e) => e.id === element.id);
+    elements.value[index] = element;
 
     emit("update:elements", elements.value);
 };
