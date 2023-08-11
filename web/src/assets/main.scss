@@ -2,9 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "./mixins.scss";
+
 @layer components {
     .input {
         @apply border placeholder:text-gray-300 border-gray-500 text-gray-500 focus:border-gray-700 focus:text-gray-700 rounded-md shadow-sm w-full px-2 py-1 focus:outline-none;
+
+        &--sm {
+            @apply text-xs px-1 py-1;
+        }
     }
 
     .btn {
@@ -22,66 +28,8 @@
             @apply bg-red-600 text-white hover:bg-red-800;
         }
     }
-}
 
-.checkered {
-    background: -webkit-linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.0980392) 25%,
-            transparent 25%,
-            transparent 75%,
-            rgba(0, 0, 0, 0.0980392) 75%,
-            rgba(0, 0, 0, 0.0980392) 0
-        ),
-        -webkit-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent
-                    25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(
-                        0,
-                        0,
-                        0,
-                        0.0980392
-                    )
-                    0),
-        white;
-    background: -moz-linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.0980392) 25%,
-            transparent 25%,
-            transparent 75%,
-            rgba(0, 0, 0, 0.0980392) 75%,
-            rgba(0, 0, 0, 0.0980392) 0
-        ),
-        -moz-linear-gradient(45deg, rgba(0, 0, 0, 0.0980392) 25%, transparent
-                    25%, transparent 75%, rgba(0, 0, 0, 0.0980392) 75%, rgba(
-                        0,
-                        0,
-                        0,
-                        0.0980392
-                    )
-                    0),
-        white;
-    background: linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.0980392) 25%,
-            transparent 25%,
-            transparent 75%,
-            rgba(0, 0, 0, 0.0980392) 75%,
-            rgba(0, 0, 0, 0.0980392) 0
-        ),
-        linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.0980392) 25%,
-            transparent 25%,
-            transparent 75%,
-            rgba(0, 0, 0, 0.0980392) 75%,
-            rgba(0, 0, 0, 0.0980392) 0
-        ),
-        white;
-    background-repeat: repeat, repeat;
-    background-position: 0px 0, 10px 10px;
-    -webkit-background-origin: padding-box, padding-box;
-    background-origin: padding-box, padding-box;
-    -webkit-background-clip: border-box, border-box;
-    background-clip: border-box, border-box;
-    -webkit-background-size: 20px 20px, 20px 20px;
-    background-size: 20px 20px, 20px 20px;
+    .checkered {
+        @include checkered;
+    }
 }

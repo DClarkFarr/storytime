@@ -224,13 +224,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="canvas flex items-stretch">
+    <div class="canvas flex">
         <div
-            class="canvas_sidebar shrink w-[250px] bg-gray-100 border border-slate-300 p-4"
+            class="canvas__sidebar relative shrink w-[250px] bg-gray-100 border border-slate-300 p-4"
         >
             <h3 class="text-lg font-semibold mb-4">Layers</h3>
             <div class="canvas__add mb-4">
-                <Dropdown>
+                <Dropdown text="Add Element">
                     <template #default="{ close }">
                         <button
                             class="dropdown__item"
@@ -248,7 +248,8 @@ onMounted(async () => {
                                 onAddLayer('draw');
                             "
                         >
-                            <PlusIcon class="inline-block text-xs" /> Drawing
+                            <PlusIcon class="inline-block text-xs" />
+                            Drawing
                         </button>
                         <button
                             class="dropdown__item"
@@ -292,35 +293,37 @@ onMounted(async () => {
                     </template>
                 </Dropdown>
             </div>
-            <div class="canvas__elements">
-                <Draggable
-                    v-model="elements"
-                    group="elements"
-                    draggable=".element-item"
-                    handle=".action--handle"
-                    @end="onReorderList"
-                >
-                    <ElementItem
-                        v-for="element in elements"
-                        :edit="editUUID === element.id"
-                        :element="element"
-                        :selected="selectedUUIDs.includes(element.id)"
-                        :thumbnail="elementThumbnails[element.id]"
-                        :key="element.id"
-                        @click="handleItemSelect"
-                        @edit="onEditElement"
+            <div class="canvas__sidebar-wrap">
+                <div class="canvas__elements">
+                    <Draggable
+                        v-model="elements"
+                        group="elements"
+                        draggable=".element-item"
+                        handle=".action--handle"
+                        @end="onReorderList"
                     >
-                        <ElementForm
+                        <ElementItem
+                            v-for="element in elements"
+                            :edit="editUUID === element.id"
                             :element="element"
-                            @update="onUpdateElement"
-                            @delete="onConfirmDeleteElement"
-                        />
-                    </ElementItem>
-                </Draggable>
+                            :selected="selectedUUIDs.includes(element.id)"
+                            :thumbnail="elementThumbnails[element.id]"
+                            :key="element.id"
+                            @click="handleItemSelect"
+                            @edit="onEditElement"
+                        >
+                            <ElementForm
+                                :element="element"
+                                @update="onUpdateElement"
+                                @delete="onConfirmDeleteElement"
+                            />
+                        </ElementItem>
+                    </Draggable>
+                </div>
             </div>
         </div>
         <div
-            class="canvas__container grow w-full checkered"
+            class="canvas__container grow w-full"
             :style="computedStyles"
             ref="canvasContainerRef"
         >
@@ -334,6 +337,7 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
+@import "@/assets/mixins.scss";
 .canvas {
     &__container {
         aspect-ratio: 16 / 9;
@@ -349,6 +353,24 @@ onMounted(async () => {
         :deep(> div[group="elements"]) {
             @apply flex flex-col gap-y-1;
         }
+    }
+
+    &__sidebar {
+        &-wrap {
+            position: absolute;
+            top: 110px;
+            left: 1rem;
+            height: calc(100% - 110px);
+            right: 1rem;
+            overflow-x: visible;
+            overflow-y: auto;
+            margin-right: -20px;
+            padding-right: 20px;
+        }
+    }
+
+    :deep(.canvas-container) {
+        @include checkered;
     }
 }
 </style>
