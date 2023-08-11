@@ -373,5 +373,6 @@ export function useCanvasModule({
         reorderCanvasElements,
         clearSelection,
         selectElementsByUUIDs,
+        removeCanvasElementById,
     };
 }

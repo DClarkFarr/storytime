@@ -4,6 +4,7 @@ import {
     CanvasElement,
     CanvasElementTypes,
     CanvasShapeTypes,
+    FabricObject,
 } from "@/types/Canvas";
 import { computed, onMounted, ref, watch } from "vue";
 import {
@@ -104,6 +105,14 @@ watch(
     }
 );
 
+const removeElementById = (uuid: string) => {
+    const index = elements.value.findIndex((element) => element.id === uuid);
+    if (index !== -1) {
+        elements.value.splice(index, 1);
+        emit("update:elements", elements.value);
+    }
+};
+
 const {
     getCanvas,
     initialize,
@@ -113,6 +122,7 @@ const {
     reorderCanvasElements,
     selectElementsByUUIDs,
     setEditUUID,
+    removeCanvasElementById,
     selectedUUIDs,
     editUUID,
 } = useCanvasModule({
@@ -125,13 +135,7 @@ const {
         emit("update:elements", elements.value);
     },
     onRemoveCanvasElement: (canvasElement) => {
-        const index = elements.value.findIndex(
-            (element) => element.id === canvasElement.uuid
-        );
-        if (index !== -1) {
-            elements.value.splice(index, 1);
-            emit("update:elements", elements.value);
-        }
+        removeElementById(canvasElement.uuid);
     },
 });
 
@@ -185,6 +189,12 @@ const onUpdateElement = async (element: CanvasElement) => {
     getCanvas()?.requestRenderAll();
 
     emit("update:elements", elements.value);
+};
+
+const onConfirmDeleteElement = (element: CanvasElement) => {
+    getCanvas()?.discardActiveObject();
+    removeCanvasElementById(element.id);
+    removeElementById(element.id);
 };
 
 onMounted(async () => {
@@ -279,17 +289,18 @@ onMounted(async () => {
                 >
                     <ElementItem
                         v-for="element in elements"
-                        @click="handleItemSelect"
                         :edit="editUUID === element.id"
                         :element="element"
                         :selected="selectedUUIDs.includes(element.id)"
                         :thumbnail="elementThumbnails[element.id]"
                         :key="element.id"
+                        @click="handleItemSelect"
                         @edit="onEditElement"
                     >
                         <ElementForm
                             :element="element"
                             @update="onUpdateElement"
+                            @delete="onConfirmDeleteElement"
                         />
                     </ElementItem>
                 </Draggable>

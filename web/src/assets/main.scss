@@ -10,8 +10,16 @@
     .btn {
         @apply border-0 px-4 py-2 leading-none text-center disabled:bg-gray-600 disabled:text-white disabled:cursor-not-allowed rounded-md;
 
+        &--sm {
+            @apply text-xs px-2 py-1;
+        }
+
         &--primary {
             @apply bg-sky-600 text-white hover:bg-sky-800;
+        }
+
+        &--danger {
+            @apply bg-red-600 text-white hover:bg-red-800;
         }
     }
 }
