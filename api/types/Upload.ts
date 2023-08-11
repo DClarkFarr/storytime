@@ -1,7 +1,7 @@
-import { Document, WithId } from "mongodb";
+import { Document, ObjectId, WithId } from "mongodb";
 
 export interface UploadDocumentSchema extends Document {
-    userId: string;
+    userId: ObjectId;
     name: string;
     alt: string;
     src: string;

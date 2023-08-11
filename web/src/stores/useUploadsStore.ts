@@ -3,11 +3,13 @@ import { Upload } from "@/types/Upload";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { v4 as uuid } from "uuid";
+import { AxiosResponse } from "axios";
 
 export type UploadingFile = {
     id: string;
     filename: string;
     status: "uploading" | "success" | "error";
+    src: string;
 };
 
 const useUploadsStore = defineStore("uploads", () => {
@@ -24,12 +26,28 @@ const useUploadsStore = defineStore("uploads", () => {
             id: uuid(),
             filename: file.name,
             status: "uploading",
+            src: "",
         };
+    };
+
+    const removeUploadingFile = (id: string) => {
+        const index = uploadingFiles.value.findIndex((f) => f.id === id);
+
+        if (index === -1) {
+            return false;
+        }
+
+        uploadingFiles.value.splice(index, 1);
+    };
+
+    const removeUploadingFiles = () => {
+        uploadingFiles.value = [];
     };
 
     const setUploadingFileStatus = (
         id: string,
-        status: UploadingFile["status"]
+        status: UploadingFile["status"],
+        src?: string
     ) => {
         const file = uploadingFiles.value.find((f) => f.id === id);
         const index = uploadingFiles.value.findIndex((f) => f.id === id);
@@ -38,6 +56,10 @@ const useUploadsStore = defineStore("uploads", () => {
             return false;
         }
         file.status = status;
+
+        if (src) {
+            file.src = src;
+        }
 
         uploadingFiles.value[index] = file;
     };
@@ -55,12 +77,17 @@ const useUploadsStore = defineStore("uploads", () => {
 
         uploadingFiles.value.push(uploadingFile);
 
-        const promise = httpClient.post("/upload", fd).then(({ data }) => data);
+        const promise = httpClient
+            .post<any, AxiosResponse<{ row: Upload }>>("/upload/file", fd)
+            .then(({ data }) => data.row);
 
         promise
             .then((data) => {
-                console.log("got data", data);
-                setUploadingFileStatus(uploadingFile.id, "success");
+                setUploadingFileStatus(uploadingFile.id, "success", data.src);
+
+                uploads.value = [data, ...uploads.value];
+
+                return data;
             })
             .catch((err) => {
                 setUploadingFileStatus(uploadingFile.id, "error");
@@ -75,8 +102,11 @@ const useUploadsStore = defineStore("uploads", () => {
 
     return {
         uploads,
+        uploadingFiles,
         setUploads,
         uploadFile,
+        removeUploadingFile,
+        removeUploadingFiles,
     };
 });
 

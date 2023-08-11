@@ -1,8 +1,9 @@
 import { UploadDocument } from "../types/Upload";
 
 export function toUploadObject(upload: UploadDocument) {
-    upload.id = upload._id.toString();
-    upload.userId = upload.userId.toString();
+    const obj = { ...upload };
+    obj.id = obj._id.toString();
+    delete obj._id;
 
-    return upload;
+    return { ...obj, userId: obj.userId.toString() };
 }
