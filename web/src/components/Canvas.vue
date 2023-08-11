@@ -183,6 +183,8 @@ const onUpdateElement = async (element: CanvasElement) => {
     await syncElementToCanvasElement(element, canvasElement);
 
     getCanvas()?.requestRenderAll();
+
+    emit("update:elements", elements.value);
 };
 
 onMounted(async () => {

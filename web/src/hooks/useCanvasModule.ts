@@ -217,6 +217,18 @@ export function useCanvasModule({
         );
     };
 
+    const adjustImageScale = (canvasElement: fabric.Image) => {
+        const height = canvasElement.getScaledHeight();
+        const width = canvasElement.getScaledWidth();
+
+        // canvasElement.set({
+        //     height,
+        //     width,
+        //     scaleX: 1,
+        //     scaleY: 1,
+        // });
+    };
+
     const keyedCanvasChangeDebouncers: {
         [K: string]: (canvasElement: FabricObject) => void;
     } = {};
@@ -227,6 +239,8 @@ export function useCanvasModule({
                     if (eventType === "scaling") {
                         if (canvasElementIsShape(canvasElement)) {
                             convertScaleToResize(canvasElement);
+                        } else if (canvasElement instanceof fabric.Image) {
+                            adjustImageScale(canvasElement);
                         }
                     }
 

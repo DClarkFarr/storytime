@@ -179,29 +179,18 @@ export async function createImageCanvasElement(
 
     let img: fabric.Image;
 
-    if (imgElement) {
-        const { height, width } = data.position;
-        delete data.position.height;
-        delete data.position.width;
+    const { width, height, ...position } = data.position;
 
+    if (imgElement) {
         img = new fabric.Image(imgElement, {
-            ...mapElementPositionToCanvasElement(data.position),
+            ...mapElementPositionToCanvasElement(position),
             ...mapElementGenericFieldsToCanvasElement(data),
             backgroundColor: data.image.backgroundColor,
         });
-
-        if (height) {
-            img.scaleToHeight(height);
-        }
-        if (width) {
-            img.scaleToWidth(width);
-        }
     } else {
         img = new fabric.Image("", {
             ...mapElementPositionToCanvasElement({
-                ...data.position,
-                height: 100,
-                width: 100,
+                ...position,
             }),
             ...mapElementGenericFieldsToCanvasElement(data),
             backgroundColor: data.image.backgroundColor,
@@ -394,13 +383,6 @@ export async function syncElementToCanvasElement(
     } else {
         throw new Error("Unknown element type: " + element.type);
     }
-
-    console.log(
-        "after syncing we got top",
-        canvasElement.top,
-        "and left",
-        canvasElement.left
-    );
 }
 
 export async function syncElementTextToCanvasElement(
@@ -446,7 +428,9 @@ export async function syncElementImageToCanvasElement(
     });
 
     if (element.value != canvasElement.getSrc()) {
-        console.log("setting new src", element.value);
+        const height = canvasElement.getScaledHeight();
+        const width = canvasElement.getScaledWidth();
+        const layout = getImageLayout(width, height);
 
         await new Promise((resolve) => {
             canvasElement.setSrc(
@@ -458,5 +442,11 @@ export async function syncElementImageToCanvasElement(
                 { crossOrigin: "anonymous" }
             );
         });
+
+        if (layout === "portrait") {
+            canvasElement.scaleToWidth(width);
+        } else {
+            canvasElement.scaleToHeight(height);
+        }
     }
 }

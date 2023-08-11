@@ -14,8 +14,8 @@ export type UploadingFile = {
 
 const useUploadsStore = defineStore("uploads", () => {
     const uploads = ref<Upload[]>([]);
-
     const uploadingFiles = ref<UploadingFile[]>([]);
+    const loaded = ref(false);
 
     const setUploads = (u: Upload[]) => {
         uploads.value = u;
@@ -100,6 +100,25 @@ const useUploadsStore = defineStore("uploads", () => {
         };
     };
 
+    const loadUploads = async () => {
+        await httpClient
+            .get<any, AxiosResponse<{ rows: Upload[] }>>("/user/images")
+            .then(({ data: { rows } }) => {
+                uploads.value = rows;
+            })
+            .finally(() => {
+                loaded.value = true;
+            });
+    };
+
+    const maybeLoadUploads = () => {
+        if (loaded.value) {
+            return;
+        }
+
+        loadUploads();
+    };
+
     return {
         uploads,
         uploadingFiles,
@@ -107,6 +126,8 @@ const useUploadsStore = defineStore("uploads", () => {
         uploadFile,
         removeUploadingFile,
         removeUploadingFiles,
+        loadUploads,
+        maybeLoadUploads,
     };
 });
 

@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getUsersCollection } from "../../db/collections";
-import { hasSession } from "../../middleware/hasSession";
+import { getUploadsCollection, getUsersCollection } from "../../db/collections";
+import { HasSessionRequest, hasSession } from "../../middleware/hasSession";
 import { ObjectId } from "mongodb";
 import { toUserObject } from "../../db/user";
+import { toUploadObject } from "../../db/upload";
 
 const router = Router();
 
@@ -17,6 +18,23 @@ router.get("/", hasSession, async (req, res) => {
     }
 
     res.json({ user: toUserObject(user) });
+});
+
+router.get("/images", hasSession, async (req: HasSessionRequest, res, next) => {
+    const uploadsCollection = await getUploadsCollection();
+
+    try {
+        const uploads = await uploadsCollection
+            .find({
+                userId: req.user._id,
+            })
+            .sort("createdAt", -1)
+            .toArray();
+
+        res.json({ rows: uploads.map(toUploadObject) });
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;

@@ -4,6 +4,7 @@ import OpacitySlider from "./OpacitySlider.vue";
 import IconUpload from "~icons/fa6-solid/upload";
 import UploadsModal from "@/components/Modals/UploadsModal.vue";
 import { useModal } from "vue-final-modal";
+import { Upload } from "@/types/Upload";
 
 const props = defineProps<{
     element: CanvasImageElement;
@@ -13,7 +14,7 @@ const emit = defineEmits<{
     update: [element: CanvasImageElement];
 }>();
 
-const { open /* close, destroy, options, patchOptions */ } = useModal({
+const { open, close /* destroy, options, patchOptions */ } = useModal({
     // Open the modal or not when the modal was created, the default value is `false`.
     defaultModelValue: false,
     /**
@@ -34,6 +35,14 @@ const { open /* close, destroy, options, patchOptions */ } = useModal({
         },
         onClosed() {
             console.log("on closed");
+        },
+
+        onSelect(upload: Upload) {
+            props.element.value = upload.src;
+            emit("update", {
+                ...props.element,
+            });
+            close();
         },
     },
 });
