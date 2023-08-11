@@ -1,5 +1,6 @@
 import { SceneDocumentSchema } from "../types/Scene";
 import { StoryDocumentSchema } from "../types/Story";
+import { UploadDocumentSchema } from "../types/Upload";
 import { UserDocumentSchema } from "../types/User";
 import { getDb } from "./connect";
 
@@ -13,4 +14,8 @@ export const getStoriesCollection = async () => {
 
 export const getScenesCollection = async () => {
     return (await getDb()).collection<SceneDocumentSchema>("scenes");
+};
+
+export const getUploadsCollection = async () => {
+    return (await getDb()).collection<UploadDocumentSchema>("uploads");
 };
