@@ -1,7 +1,7 @@
 import httpClient from "@/services/httpClient";
 import { Point, StoryWithScenes } from "@/types/Story";
 import { AxiosResponse } from "axios";
-import { Ref, ref } from "vue";
+import { Ref, computed, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 import usePaginate from "./usePaginate";
 
@@ -9,6 +9,8 @@ export type UseTimelineProps = {
     timelineRef: Ref<HTMLElement | null>;
     story: StoryWithScenes;
 };
+
+export type CreatePointData = Pick<Point, "row" | "col">;
 
 const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
     const VALUES = {
@@ -26,6 +28,7 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         page,
         perPage: stepsPerPage,
         items: numSteps,
+        staticItems: 1,
     });
 
     const setPage = (p: number) => {
@@ -48,9 +51,34 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         stepsPerPage.value = s;
     };
 
+    const createPoint = async (point: CreatePointData) => {
+        const p = await httpClient
+            .post<any, AxiosResponse<{ row: Point }>>(
+                `/story/${story.id}/point`,
+                point
+            )
+            .then(({ data }) => data.row);
+
+        setPoints([...points.value, p]);
+    };
+
+    const addInitialPoint = async () => {
+        await createPoint({
+            row: 0,
+            col: 0,
+        });
+    };
+
+    const maybeDoInitialData = async () => {
+        if (!points.value.length) {
+            await addInitialPoint();
+        }
+    };
+
     const init = async () => {
         await loadPoints();
         setResizeListener();
+        await maybeDoInitialData();
     };
 
     const loadPoints = async () => {
@@ -109,6 +137,26 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         setNumSteps(numSteps.value + 1);
     };
 
+    const prevPage = () => {
+        setPage(page.value - 1);
+    };
+
+    const nextPage = () => {
+        setPage(page.value + 1);
+    };
+
+    const pointsByStep = computed(() => {
+        return points.value.reduce((acc, p) => {
+            if (!acc[p.row]) {
+                acc[p.row] = [];
+            }
+
+            acc[p.row].push(p);
+
+            return acc;
+        }, {} as Record<number, Point[]>);
+    });
+
     return {
         numSteps,
         numStepPoints,
@@ -116,6 +164,9 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         points,
         page,
         paginate,
+        pointsByStep,
+        prevPage,
+        nextPage,
         setPoints,
         init,
         loadPoints,

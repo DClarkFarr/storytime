@@ -63,6 +63,9 @@ router.post("/:id/scene", async (req: HasSessionRequest, res) => {
     }
 });
 
+/**
+ * Get story points
+ */
 router.get("/:id/point", async (req: HasSessionRequest, res) => {
     const pointsCollection = await getPointsCollection();
     const storiesCollection = await getStoriesCollection();
@@ -82,6 +85,47 @@ router.get("/:id/point", async (req: HasSessionRequest, res) => {
             .toArray();
 
         res.json({ rows: points.map(toPointObject) });
+    } catch (err) {
+        throw new DbError(err.message);
+    }
+});
+
+/**
+ * Create story point
+ */
+router.post("/:id/point", async (req: HasSessionRequest, res) => {
+    const pointsCollection = await getPointsCollection();
+    const storiesCollection = await getStoriesCollection();
+
+    try {
+        const story = await storiesCollection.findOne({
+            _id: new ObjectId(req.params.id),
+            userId: req.user._id,
+        });
+
+        if (!story) {
+            throw new UserError("story not found", 404);
+        }
+
+        const row = req.body.row || 0;
+        const col = req.body.col || 0;
+
+        const { insertedId } = await pointsCollection.insertOne({
+            storyId: story._id,
+            userId: req.user._id,
+            sceneId: null,
+            row,
+            col,
+            actions: [],
+            createdAt: new Date(),
+        });
+
+        const point = await pointsCollection.findOne({
+            _id: insertedId,
+            userId: req.user._id,
+        });
+
+        res.json({ row: toPointObject(point) });
     } catch (err) {
         throw new DbError(err.message);
     }

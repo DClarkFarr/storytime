@@ -25,11 +25,23 @@ onMounted(() => {
         <div class="timeline__steps p-2" ref="timelineStepsRef">
             <div class="timeline__step" v-for="index in visibleItemIndexes">
                 <div
-                    class="timeline__step-heading text-center leading-none font-semibold mb-2"
+                    class="timeline__step-heading text-center leading-none font-semibold"
                 >
                     Step {{ index + 1 }}
                 </div>
-                <div>was {{ timeline.stepsPerPage }}</div>
+                <div class="timeline__step-content">
+                    <div
+                        class="timeline__step-points"
+                        v-if="timeline.pointsByStep.value[index]"
+                    >
+                        <div
+                            class="timeline__step-point"
+                            v-for="point in timeline.pointsByStep.value[index]"
+                        >
+                            Point: {{ point.col + 1 }}
+                        </div>
+                    </div>
+                </div>
             </div>
             <div
                 class="timeline__step timeline__step--add flex flex-col justify-center items-center"
@@ -42,7 +54,35 @@ onMounted(() => {
                 <div>Add Step</div>
             </div>
         </div>
-        <div class="timeline__pagination"></div>
+        <div class="timeline__pagination flex items-center gap-x-2">
+            <div>
+                <button
+                    class="btn btn--light"
+                    @click="timeline.prevPage"
+                    :disabled="timeline.page.value <= 1"
+                >
+                    Prev
+                </button>
+            </div>
+            <div>
+                <button
+                    class="btn btn--light"
+                    @click="timeline.nextPage"
+                    :disabled="
+                        timeline.paginate.pages.value <= timeline.page.value
+                    "
+                >
+                    Next
+                </button>
+            </div>
+            <div>
+                Page {{ timeline.page.value }} of
+                {{ timeline.paginate.pages.value }}, showing
+                {{ timeline.paginate.offset.value + 1 }} -
+                {{ timeline.paginate.offset.value + visibleItemIndexes.length }}
+                of {{ timeline.numSteps }} steps
+            </div>
+        </div>
     </div>
 </template>
 <style lang="scss" scoped>
@@ -57,6 +97,14 @@ onMounted(() => {
 
     &__step {
         @apply bg-slate-100 rounded w-[150px] flex flex-col self-stretch;
+
+        &-heading {
+            @apply py-1 bg-slate-300 rounded-t shrink-0;
+        }
+
+        &-content {
+            @apply p-2 grow;
+        }
 
         &--add {
             @apply bg-sky-200 cursor-pointer;

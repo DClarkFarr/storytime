@@ -27,6 +27,14 @@
         &--danger {
             @apply bg-red-600 text-white hover:bg-red-800;
         }
+
+        &--gray {
+            @apply bg-gray-600 text-white hover:bg-gray-800;
+        }
+
+        &--light {
+            @apply bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:text-slate-300 disabled:bg-slate-100/50 disabled:hover:bg-slate-100/50;
+        }
     }
 
     .checkered {
