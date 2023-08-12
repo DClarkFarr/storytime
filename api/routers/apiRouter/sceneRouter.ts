@@ -89,7 +89,7 @@ router.put("/:id", async (req: HasSessionRequest, res, next) => {
             );
 
             try {
-                const filename = `/uploads/scene-thumbnails/${existing._id}.jpg`;
+                const filename = `/uploads/story-${existing.storyId}/scene-${existing._id}.jpg`;
                 beforeSaveToDirectory(`../web/public${filename}`);
 
                 fs.writeFileSync(
