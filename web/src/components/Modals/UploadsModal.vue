@@ -77,7 +77,7 @@ onMounted(() => {
                         v-if="uploads.uploadingFiles.length > 1"
                     >
                         <button
-                            class="btn btn--danger btn--sm text-red-700"
+                            class="btn btn--danger btn--sm"
                             @click="uploads.removeUploadingFiles"
                         >
                             Remove all

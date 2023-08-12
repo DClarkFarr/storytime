@@ -8,14 +8,16 @@ import { v4 as uuid } from "uuid";
 import { getUploadsCollection } from "../../db/collections";
 import { UploadDocumentSchema } from "../../types/Upload";
 import { toUploadObject } from "../../db/upload";
+import { beforeSaveToDirectory } from "../../util/file";
 
 const router = Router();
 
 router.use(hasSession);
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "../web/public/uploads");
+    destination: function (req: HasSessionRequest, file, cb) {
+        beforeSaveToDirectory(`../web/public/uploads/user-${req.user._id}`);
+        cb(null, `../web/public/uploads/user-${req.user._id}`);
     },
     filename: function (req, file, cb) {
         const extension = file.originalname.split(".").pop();

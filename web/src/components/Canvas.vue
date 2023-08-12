@@ -4,7 +4,6 @@ import {
     CanvasElement,
     CanvasElementTypes,
     CanvasShapeTypes,
-    FabricObject,
 } from "@/types/Canvas";
 import { computed, onMounted, ref, watch } from "vue";
 import {
@@ -26,7 +25,7 @@ import { createImageElement } from "@/methods/canvas";
 import ElementForm from "./Canvas/ElementForm.vue";
 
 const emit = defineEmits<{
-    (e: "update:elements", val: CanvasElement[]): void;
+    (e: "save", val: { elements: CanvasElement[]; imageData?: string }): void;
 }>();
 
 const props = withDefaults(
@@ -40,12 +39,23 @@ const props = withDefaults(
     }
 );
 
-const elements = computed<CanvasElement[]>({
-    get: () => props.elements,
-    set: (val) => {
-        emit("update:elements", val);
-    },
-});
+const elements = ref<CanvasElement[]>(props.elements);
+watch(
+    () => props.elements,
+    (val) => {
+        elements.value = val;
+    }
+);
+
+const onSaveCanvas = () => {
+    emit("save", {
+        elements: elements.value,
+        imageData: getCanvas()?.toDataURL({
+            format: "jpg",
+            quality: 0.8,
+        }),
+    });
+};
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvasContainerRef = ref<HTMLDivElement | null>(null);
@@ -76,7 +86,7 @@ const onAddLayer = async (type: CanvasElementTypes, alt?: string) => {
 
     getCanvas()?.requestRenderAll();
 
-    emit("update:elements", elements.value);
+    onSaveCanvas();
 };
 
 const computeElementThumbnails = () => {
@@ -109,7 +119,7 @@ const removeElementById = (uuid: string) => {
     const index = elements.value.findIndex((element) => element.id === uuid);
     if (index !== -1) {
         elements.value.splice(index, 1);
-        emit("update:elements", elements.value);
+        onSaveCanvas();
     }
 };
 
@@ -132,7 +142,7 @@ const {
             elementsById.value[canvasElement.uuid]
         );
 
-        emit("update:elements", elements.value);
+        onSaveCanvas();
     },
     onRemoveCanvasElement: (canvasElement) => {
         removeElementById(canvasElement.uuid);
@@ -201,7 +211,7 @@ const onUpdateElement = async (element: CanvasElement) => {
     const index = elements.value.findIndex((e) => e.id === element.id);
     elements.value[index] = element;
 
-    emit("update:elements", elements.value);
+    onSaveCanvas();
 };
 
 const onConfirmDeleteElement = (element: CanvasElement) => {

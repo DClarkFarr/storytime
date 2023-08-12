@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { debounce } from "lodash-es";
 import Canvas from "@/components/Canvas.vue";
 import httpClient from "@/services/httpClient";
+import { CanvasElement } from "@/types/Canvas";
 
 const props = defineProps<{
     scene: SceneWithElements;
@@ -11,22 +12,29 @@ const props = defineProps<{
 
 const scene = ref<SceneWithElements>(props.scene);
 
-const onSave = async () => {
+const onSaveCanvas = async ({
+    elements,
+    imageData,
+}: {
+    elements: CanvasElement[];
+    imageData?: string;
+}) => {
+    scene.value.elements = elements;
+
     httpClient.put(`/scene/${props.scene.id}`, {
-        elements: scene.value.elements,
-        name: scene.value.name,
-        description: scene.value.description,
+        elements,
+        imageData,
     });
 };
 
-const onSaveDebounced = debounce(onSave, 500);
+const onSaveCanvasDebounced = debounce(onSaveCanvas, 500);
 </script>
 
 <template>
     <Canvas
-        v-model:elements="scene.elements"
-        @update:elements="onSaveDebounced"
+        :elements="scene.elements"
         :width="1200"
+        @save="onSaveCanvasDebounced"
     >
     </Canvas>
 </template>

@@ -266,7 +266,7 @@ export function useCanvasModule({
     const handleCanvasElementEvent = (
         eventType: string,
         canvasElement: FabricObject,
-        event: fabric.IEvent<MouseEvent>
+        event: fabric.IEvent<MouseEvent | Event>
     ) => {
         if (!canvasElement) {
             console.warn(
