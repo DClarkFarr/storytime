@@ -84,7 +84,7 @@ const onAddLayer = async (type: CanvasElementTypes, alt?: string) => {
 
     await addElementToCanvas(element);
 
-    getCanvas()?.requestRenderAll();
+    getCanvas()?.renderAll();
 
     onSaveCanvas();
 };
@@ -206,10 +206,10 @@ const onUpdateElement = async (element: CanvasElement) => {
 
     await syncElementToCanvasElement(element, canvasElement);
 
-    getCanvas()?.requestRenderAll();
-
     const index = elements.value.findIndex((e) => e.id === element.id);
     elements.value[index] = element;
+
+    getCanvas()?.renderAll();
 
     onSaveCanvas();
 };

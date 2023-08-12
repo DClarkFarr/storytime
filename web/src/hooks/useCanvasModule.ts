@@ -143,7 +143,7 @@ export function useCanvasModule({
             await addElementToCanvas(elements[i]);
         }
 
-        canvas?.requestRenderAll();
+        canvas?.renderAll();
     };
 
     const addElementToCanvas = async (element: CanvasElement) => {
@@ -298,7 +298,7 @@ export function useCanvasModule({
 
         canvasElements = newArr;
 
-        canvas?.requestRenderAll();
+        canvas?.renderAll();
     };
 
     const clearSelection = () => {
@@ -329,7 +329,7 @@ export function useCanvasModule({
             );
         }
 
-        canvas?.requestRenderAll();
+        canvas?.renderAll();
     };
 
     const getCanvas = () => canvas;
@@ -348,7 +348,7 @@ export function useCanvasModule({
         const canvasElement = findElementById(id);
         canvas?.remove(canvasElement);
         canvasElements = canvasElements.filter((el) => el.uuid !== id);
-        canvas?.requestRenderAll();
+        canvas?.renderAll();
 
         if (typeof onRemoveCanvasElement === "function") {
             onRemoveCanvasElement(canvasElement);
