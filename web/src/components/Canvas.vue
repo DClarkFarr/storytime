@@ -236,7 +236,7 @@ onMounted(async () => {
 <template>
     <div class="canvas flex">
         <div
-            class="canvas__sidebar relative shrink w-[250px] bg-gray-100 border border-slate-300 p-4"
+            class="canvas__sidebar relative shrink-0 w-[250px] bg-gray-100 border border-slate-300 p-4"
         >
             <h3 class="text-lg font-semibold mb-4">Layers</h3>
             <div class="canvas__add mb-4">

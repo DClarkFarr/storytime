@@ -80,7 +80,7 @@ onMounted(() => {
 
         <div class="edit-story__content mx-auto px-4 max-w-[1600px]">
             <h3 class="font-semibold">Scenes</h3>
-            <div class="scenes grid gap-3">
+            <div class="scenes grid gap-3 mb-8">
                 <RouterLink
                     class="block"
                     :to="{
@@ -90,10 +90,11 @@ onMounted(() => {
                     v-for="scene in story?.scenes"
                     :key="scene.id"
                 >
-                    <SceneThumbnail :scene="scene" />
+                    <SceneThumbnail :scene="scene" class="h-full" />
                 </RouterLink>
             </div>
-            <div class="timeline">todo::timeline here</div>
+            <h3 class="font-semibold">Construct Timeline</h3>
+            <div class="timeline"></div>
         </div>
     </div>
 </template>

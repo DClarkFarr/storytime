@@ -21,6 +21,7 @@ const updateScene = (
         elements: CanvasElement[];
         imageData: string;
         name: string;
+        description: string;
     }>
 ) => {
     const promise = httpClient
@@ -61,6 +62,12 @@ const onSaveSceneName = () => {
         name: scene.value.name,
     });
 };
+
+const onSaveDescriptionDebounced = debounce(() => {
+    updateScene({
+        description: scene.value.description,
+    });
+}, 500);
 </script>
 
 <template>
@@ -98,4 +105,14 @@ const onSaveSceneName = () => {
         @save="onSaveCanvasDebounced"
     >
     </Canvas>
+    <div class="footer">
+        <div class="ml-[250px] p-4">
+            <textarea
+                rows="10"
+                class="textarea w-full text-xl input"
+                v-model="scene.description"
+                @input="onSaveDescriptionDebounced"
+            ></textarea>
+        </div>
+    </div>
 </template>
