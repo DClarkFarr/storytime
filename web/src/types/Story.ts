@@ -11,3 +11,19 @@ export type Story = {
 export type StoryWithScenes<T extends Scene = Scene> = Story & {
     scenes: T[];
 };
+
+export type PointAction = {
+    text: string;
+    toPointId: string;
+};
+
+export type Point = {
+    id: string;
+    userId: string;
+    storyId: string;
+    sceneId: string;
+    row: number;
+    col: number;
+    actions: PointAction[];
+    createdAt: Date;
+};

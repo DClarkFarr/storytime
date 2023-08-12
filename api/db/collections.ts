@@ -1,5 +1,6 @@
 import { SceneDocumentSchema } from "../types/Scene";
 import { StoryDocumentSchema } from "../types/Story";
+import { PointDocumentSchema } from "../types/Story/Point";
 import { UploadDocumentSchema } from "../types/Upload";
 import { UserDocumentSchema } from "../types/User";
 import { getDb } from "./connect";
@@ -18,4 +19,8 @@ export const getScenesCollection = async () => {
 
 export const getUploadsCollection = async () => {
     return (await getDb()).collection<UploadDocumentSchema>("uploads");
+};
+
+export const getPointsCollection = async () => {
+    return (await getDb()).collection<PointDocumentSchema>("points");
 };

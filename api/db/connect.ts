@@ -73,6 +73,7 @@ async function registerSceneIndexes(db: Db) {
     const sceneIndexes = {
         userId: false,
         storyId: false,
+        userStory: false,
     };
 
     const indexes = await scenesCollection.listIndexes().toArray();
@@ -87,6 +88,46 @@ async function registerSceneIndexes(db: Db) {
     if (!sceneIndexes.storyId) {
         await scenesCollection.createIndex({ storyId: 1 }, { name: "storyId" });
     }
+    if (!sceneIndexes.userStory) {
+        await scenesCollection.createIndex(
+            { userId: -1, storyId: -1 },
+            { name: "userStory" }
+        );
+    }
+}
+
+async function registerPointIndexes(db: Db) {
+    try {
+        await db.createCollection("points", {});
+        console.log("created collection points");
+    } catch {}
+
+    const pointsCollection = db.collection("points");
+
+    const pointIndexes = {
+        userId: false,
+        storyId: false,
+        userStory: false,
+    };
+
+    const indexes = await pointsCollection.listIndexes().toArray();
+
+    for (let index of indexes) {
+        pointIndexes[index.name] = true;
+    }
+
+    if (!pointIndexes.userId) {
+        await pointsCollection.createIndex({ userId: 1 }, { name: "userId" });
+    }
+    if (!pointIndexes.storyId) {
+        await pointsCollection.createIndex({ storyId: 1 }, { name: "storyId" });
+    }
+    if (!pointIndexes.userStory) {
+        await pointsCollection.createIndex(
+            { userId: 1, storyId: 1 },
+            { name: "userStory" }
+        );
+    }
 }
 
 async function applyIndexes() {
@@ -95,6 +136,7 @@ async function applyIndexes() {
     registerUserIndexes(db);
     registerStoryIndexes(db);
     registerSceneIndexes(db);
+    registerPointIndexes(db);
 }
 
 async function initializeDb() {

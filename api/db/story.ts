@@ -30,7 +30,8 @@ export async function populateStoryScenes<
 
     try {
         modded.scenes = await scenesColletion
-            .find({ storyId: modded._id })
+            .find({ storyId: modded._id, userId: modded.userId })
+            .sort({ createdAt: -1 })
             .toArray();
     } catch (err) {
         console.error("error loading story scenes", err);

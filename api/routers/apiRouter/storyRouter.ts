@@ -3,6 +3,7 @@ import { HasSessionRequest, hasSession } from "../../middleware/hasSession";
 import { ObjectId } from "mongodb";
 import { StoryDocumentSchema } from "../../types/Story";
 import {
+    getPointsCollection,
     getScenesCollection,
     getStoriesCollection,
 } from "../../db/collections";
@@ -10,6 +11,7 @@ import DbError from "../../errors/DbError";
 import { toStoryObject, populateStoryScenes } from "../../db/story";
 import UserError from "../../errors/UserError";
 import { toSceneObject } from "../../db/scene";
+import { toPointObject } from "../../db/point";
 
 const router = Router();
 
@@ -56,6 +58,30 @@ router.post("/:id/scene", async (req: HasSessionRequest, res) => {
         }
 
         res.json({ row: toSceneObject(scene) });
+    } catch (err) {
+        throw new DbError(err.message);
+    }
+});
+
+router.get("/:id/point", async (req: HasSessionRequest, res) => {
+    const pointsCollection = await getPointsCollection();
+    const storiesCollection = await getStoriesCollection();
+
+    try {
+        const story = await storiesCollection.findOne({
+            _id: new ObjectId(req.params.id),
+            userId: req.user._id,
+        });
+
+        if (!story) {
+            throw new UserError("story not found", 404);
+        }
+
+        const points = await pointsCollection
+            .find({ storyId: story._id, userId: req.user._id })
+            .toArray();
+
+        res.json({ rows: points.map(toPointObject) });
     } catch (err) {
         throw new DbError(err.message);
     }

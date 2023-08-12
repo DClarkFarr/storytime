@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import SceneThumbnail from "@/components/Scene/SceneThumbnail.vue";
+import Timeline from "@/components/Timeline.vue";
 import httpClient from "@/services/httpClient";
 import { StoryWithScenes } from "@/types/Story";
 import { onMounted, ref } from "vue";
@@ -94,7 +95,9 @@ onMounted(() => {
                 </RouterLink>
             </div>
             <h3 class="font-semibold">Construct Timeline</h3>
-            <div class="timeline"></div>
+            <div class="timeline" v-if="story">
+                <Timeline :story="story" />
+            </div>
         </div>
     </div>
 </template>
