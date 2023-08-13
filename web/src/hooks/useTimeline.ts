@@ -1,5 +1,5 @@
 import httpClient from "@/services/httpClient";
-import { Point, StoryWithScenes } from "@/types/Story";
+import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
 import { AxiosResponse } from "axios";
 import { Ref, computed, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
@@ -157,6 +157,23 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         }, {} as Record<number, Point[]>);
     });
 
+    const pointsGrid = computed(() => {
+        const grid = new Array(numSteps.value).fill(1).map((_, i) => {
+            return new Array(numStepPoints.value).fill(1).map((_, j) => {
+                const found = pointsByStep.value[i]?.find((p) => p.col === j);
+                if (!found) {
+                    return null;
+                }
+                return {
+                    ...found,
+                    scene: story.scenes.find((s) => s.id === found.sceneId),
+                } as PointWithScene;
+            });
+        });
+
+        return grid;
+    });
+
     return {
         numSteps,
         numStepPoints,
@@ -165,6 +182,7 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         page,
         paginate,
         pointsByStep,
+        pointsGrid,
         prevPage,
         nextPage,
         setPoints,

@@ -1,8 +1,12 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
 import useTimeline from "@/hooks/useTimeline";
-import { StoryWithScenes } from "@/types/Story";
+import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
 import IconPlus from "~icons/fa6-solid/plus";
+import StepPoint from "./Timeline/StepPoint.vue";
+import { useModal } from "vue-final-modal";
+import AttachSceneModal from "./Modals/AttachSceneModal.vue";
+import { Scene } from "@/types/Scene";
 
 const props = defineProps<{
     story: StoryWithScenes;
@@ -16,29 +20,70 @@ const visibleItemIndexes = computed(() => {
     return timeline.paginate.visibleItemIndexes.value;
 });
 
+const attachSceneModal = useModal({
+    component: AttachSceneModal,
+    attrs: {
+        story: props.story,
+        scenes: props.story.scenes,
+        onCancel: () => {
+            attachSceneModal.close();
+        },
+        onAttach: (point: PointWithScene, selectedScene: Scene) => {
+            attachSceneModal.close();
+        },
+    },
+});
+const onShowAttachPointModal = async (point: PointWithScene) => {
+    attachSceneModal.patchOptions({
+        attrs: {
+            scenes: attachSceneModal.options.attrs?.scenes as Scene[],
+            point,
+        },
+    });
+    await attachSceneModal.open();
+};
+
 onMounted(() => {
     timeline.init();
 });
 </script>
 <template>
     <div class="timeline" ref="timelineRef">
-        <div class="timeline__steps p-2" ref="timelineStepsRef">
-            <div class="timeline__step" v-for="index in visibleItemIndexes">
+        <div class="timeline__steps p-2 mb-2" ref="timelineStepsRef">
+            <div
+                class="timeline__step"
+                v-for="stepIndex in visibleItemIndexes"
+                :key="stepIndex"
+            >
                 <div
                     class="timeline__step-heading text-center leading-none font-semibold"
                 >
-                    Step {{ index + 1 }}
+                    Step {{ stepIndex + 1 }}
                 </div>
                 <div class="timeline__step-content">
-                    <div
-                        class="timeline__step-points"
-                        v-if="timeline.pointsByStep.value[index]"
-                    >
+                    <div class="timeline__step-points">
                         <div
-                            class="timeline__step-point"
-                            v-for="point in timeline.pointsByStep.value[index]"
+                            class="timeline__step-point-wrapper"
+                            v-for="(col, colIndex) in timeline.pointsGrid.value[
+                                stepIndex
+                            ]"
+                            :key="`${stepIndex}-${colIndex}`"
                         >
-                            Point: {{ point.col + 1 }}
+                            <StepPoint
+                                v-if="col"
+                                :point="col"
+                                :step="stepIndex"
+                                :story="story"
+                                :points="timeline.points.value"
+                                @attach="onShowAttachPointModal"
+                            />
+                            <div
+                                class="timeline__step-point timeline__step-point--placeholder"
+                                v-else
+                            >
+                                <div v-if="stepIndex > 0">show button!</div>
+                                <div v-else></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -77,10 +122,10 @@ onMounted(() => {
             </div>
             <div>
                 Page {{ timeline.page.value }} of
-                {{ timeline.paginate.pages.value }}, showing
+                {{ timeline.paginate.pages.value }}, showing steps
                 {{ timeline.paginate.offset.value + 1 }} -
                 {{ timeline.paginate.offset.value + visibleItemIndexes.length }}
-                of {{ timeline.numSteps }} steps
+                of {{ timeline.numSteps }}
             </div>
         </div>
     </div>

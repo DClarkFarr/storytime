@@ -27,3 +27,7 @@ export type Point = {
     actions: PointAction[];
     createdAt: Date;
 };
+
+export type PointWithScene<P extends Point = Point> = P & {
+    scene: Scene | null;
+};
