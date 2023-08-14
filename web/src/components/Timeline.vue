@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
 import useTimeline from "@/hooks/useTimeline";
-import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
+import { PointWithScene, StoryWithScenes } from "@/types/Story";
 import IconPlus from "~icons/fa6-solid/plus";
 import StepPoint from "./Timeline/StepPoint.vue";
 import { useModal } from "vue-final-modal";
@@ -23,12 +23,16 @@ const visibleItemIndexes = computed(() => {
 const attachSceneModal = useModal({
     component: AttachSceneModal,
     attrs: {
+        point: null,
         story: props.story,
         scenes: props.story.scenes,
         onCancel: () => {
             attachSceneModal.close();
         },
         onAttach: (point: PointWithScene, selectedScene: Scene) => {
+            timeline.updatePoint(point.id, {
+                sceneId: selectedScene.id,
+            });
             attachSceneModal.close();
         },
     },
@@ -41,6 +45,10 @@ const onShowAttachPointModal = async (point: PointWithScene) => {
         },
     });
     await attachSceneModal.open();
+};
+
+const onDeletePoint = (point: PointWithScene) => {
+    timeline.deletePoint(point.id);
 };
 
 onMounted(() => {
@@ -76,6 +84,7 @@ onMounted(() => {
                                 :story="story"
                                 :points="timeline.points.value"
                                 @attach="onShowAttachPointModal"
+                                @delete="onDeletePoint"
                             />
                             <div
                                 class="timeline__step-point timeline__step-point--placeholder"

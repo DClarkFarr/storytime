@@ -1,5 +1,10 @@
 import httpClient from "@/services/httpClient";
-import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
+import {
+    Point,
+    PointAction,
+    PointWithScene,
+    StoryWithScenes,
+} from "@/types/Story";
 import { AxiosResponse } from "axios";
 import { Ref, computed, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
@@ -8,6 +13,13 @@ import usePaginate from "./usePaginate";
 export type UseTimelineProps = {
     timelineRef: Ref<HTMLElement | null>;
     story: StoryWithScenes;
+};
+
+export type UpdatePointData = {
+    sceneId?: string | null;
+    row?: number;
+    col?: number;
+    actions?: PointAction[];
 };
 
 export type CreatePointData = Pick<Point, "row" | "col">;
@@ -60,6 +72,33 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
             .then(({ data }) => data.row);
 
         setPoints([...points.value, p]);
+    };
+
+    const updatePoint = async (id: string, data: UpdatePointData) => {
+        const p = await httpClient
+            .put<any, AxiosResponse<{ row: Point }>>(
+                `/story/${story.id}/point/${id}`,
+                data
+            )
+            .then(({ data }) => data.row);
+
+        const index = points.value.findIndex((p) => p.id === id);
+
+        points.value.splice(index, 1, p);
+
+        setNumSteps(calculateNumSteps());
+        setNumStepPoints(numSalculateStepPoints());
+    };
+
+    const deletePoint = async (id: string) => {
+        await httpClient.delete(`/story/${story.id}/point/${id}`);
+
+        const index = points.value.findIndex((p) => p.id === id);
+
+        points.value.splice(index, 1);
+
+        setNumSteps(calculateNumSteps());
+        setNumStepPoints(numSalculateStepPoints());
     };
 
     const addInitialPoint = async () => {
@@ -151,23 +190,19 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
                 acc[p.row] = [];
             }
 
-            acc[p.row].push(p);
+            acc[p.row].push({
+                ...p,
+                scene: story.scenes.find((s) => s.id === p.sceneId) || null,
+            } as PointWithScene);
 
             return acc;
-        }, {} as Record<number, Point[]>);
+        }, {} as Record<number, PointWithScene[]>);
     });
 
     const pointsGrid = computed(() => {
         const grid = new Array(numSteps.value).fill(1).map((_, i) => {
             return new Array(numStepPoints.value).fill(1).map((_, j) => {
-                const found = pointsByStep.value[i]?.find((p) => p.col === j);
-                if (!found) {
-                    return null;
-                }
-                return {
-                    ...found,
-                    scene: story.scenes.find((s) => s.id === found.sceneId),
-                } as PointWithScene;
+                return pointsByStep.value[i]?.find((p) => p.col === j) || null;
             });
         });
 
@@ -194,6 +229,9 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         getPointsByStep,
         setPage,
         addStep,
+        createPoint,
+        updatePoint,
+        deletePoint,
     };
 };
 

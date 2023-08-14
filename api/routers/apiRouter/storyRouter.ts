@@ -34,7 +34,7 @@ router.get("/:id", async (req: HasSessionRequest, res) => {
     res.json({ row: toStoryObject(populatedStory) });
 });
 
-router.post("/:id/scene", async (req: HasSessionRequest, res) => {
+router.post("/:id/scene", async (req: HasSessionRequest, res, next) => {
     const scenesCollection = await getScenesCollection();
 
     const { insertedId } = await scenesCollection.insertOne({
@@ -59,14 +59,14 @@ router.post("/:id/scene", async (req: HasSessionRequest, res) => {
 
         res.json({ row: toSceneObject(scene) });
     } catch (err) {
-        throw new DbError(err.message);
+        next(err);
     }
 });
 
 /**
  * Get story points
  */
-router.get("/:id/point", async (req: HasSessionRequest, res) => {
+router.get("/:id/point", async (req: HasSessionRequest, res, next) => {
     const pointsCollection = await getPointsCollection();
     const storiesCollection = await getStoriesCollection();
 
@@ -86,14 +86,14 @@ router.get("/:id/point", async (req: HasSessionRequest, res) => {
 
         res.json({ rows: points.map(toPointObject) });
     } catch (err) {
-        throw new DbError(err.message);
+        next(err.message);
     }
 });
 
 /**
  * Create story point
  */
-router.post("/:id/point", async (req: HasSessionRequest, res) => {
+router.post("/:id/point", async (req: HasSessionRequest, res, next) => {
     const pointsCollection = await getPointsCollection();
     const storiesCollection = await getStoriesCollection();
 
@@ -127,7 +127,73 @@ router.post("/:id/point", async (req: HasSessionRequest, res) => {
 
         res.json({ row: toPointObject(point) });
     } catch (err) {
-        throw new DbError(err.message);
+        next(err.message);
+    }
+});
+
+router.put("/:id/point/:pointId", async (req: HasSessionRequest, res, next) => {
+    const pointsCollection = await getPointsCollection();
+
+    try {
+        const existing = await pointsCollection.findOne({
+            _id: new ObjectId(req.params.pointId),
+            userId: req.user._id,
+            storyId: new ObjectId(req.params.id),
+        });
+
+        if (!existing) {
+            throw new UserError("point not found", 404);
+        }
+
+        const toSet = {};
+
+        if (req.body.sceneId) {
+            try {
+                const scene = (await getScenesCollection()).findOne({
+                    _id: new ObjectId(req.body.sceneId),
+                    userId: req.user._id,
+                });
+
+                if (!scene) {
+                    throw new UserError("Scene ID not found", 404);
+                }
+            } catch {
+                throw new UserError("Invalid scene ID", 400);
+            }
+            toSet["sceneId"] = new ObjectId(req.body.sceneId);
+        }
+
+        if (req.body.row) {
+            if (typeof req.body.row !== "number") {
+                throw new UserError("Invalid row value", 400);
+            }
+            toSet["row"] = req.body.row;
+        }
+
+        if (req.body.col) {
+            if (typeof req.body.col !== "number") {
+                throw new UserError("Invalid col value", 400);
+            }
+            toSet["col"] = req.body.col;
+        }
+
+        if (req.body.actions) {
+            if (!Array.isArray(req.body.actions)) {
+                throw new UserError("Invalid actions", 400);
+            }
+            toSet["actions"] = req.body.actions;
+        }
+
+        await pointsCollection.updateOne(
+            { _id: existing._id },
+            {
+                $set: toSet,
+            }
+        );
+
+        res.json({ row: toPointObject({ ...existing, ...toSet }) });
+    } catch (err) {
+        next(err.message);
     }
 });
 
@@ -142,7 +208,7 @@ router.get("/", async (req: HasSessionRequest, res) => {
     res.json({ rows: stories.map(toStoryObject) });
 });
 
-router.post("/", async (req: HasSessionRequest, res) => {
+router.post("/", async (req: HasSessionRequest, res, next) => {
     // create story
 
     const storyDoc: StoryDocumentSchema = {
@@ -161,7 +227,7 @@ router.post("/", async (req: HasSessionRequest, res) => {
 
         res.json({ row: toStoryObject(story) });
     } catch (err) {
-        throw new DbError(err.message);
+        next(err.message);
     }
 });
 

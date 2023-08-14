@@ -1,26 +1,26 @@
 <script lang="ts" setup>
 import { Scene } from "@/types/Scene";
-import { Point, PointWithScene } from "@/types/Story";
+import { PointWithScene } from "@/types/Story";
 import { ref } from "vue";
 import { VueFinalModal } from "vue-final-modal";
 import SceneThumbnail from "../Scene/SceneThumbnail.vue";
 
 const emit = defineEmits<{
-    (e: "attach", point: PointWithScene, scene: Scene): void;
-    (e: "cancel"): void;
+    attach: [point: PointWithScene, scene: Scene];
+    cancel: [];
 }>();
 
 const props = withDefaults(
     defineProps<{
-        onOpen?: () => void;
-        onClose?: () => void;
-        onClickOutside?: () => void;
+        scenes: Scene[];
+        point: PointWithScene | null;
         clickToClose?: boolean;
         escToClose?: boolean;
         modalId?: string;
         show?: boolean;
-        scenes: Scene[];
-        point: PointWithScene;
+        onOpen?: () => void;
+        onClose?: () => void;
+        onClickOutside?: () => void;
     }>(),
     {
         clickToClose: false,
@@ -36,7 +36,7 @@ const props = withDefaults(
 const selectedScene = ref<Scene | null>(null);
 
 const onAttach = () => {
-    emit("attach", props.point, selectedScene.value as Scene);
+    emit("attach", props.point as PointWithScene, selectedScene.value as Scene);
 };
 
 const onCancel = () => {

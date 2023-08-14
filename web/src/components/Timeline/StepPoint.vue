@@ -1,10 +1,15 @@
 <script lang="ts" setup>
+import { computed, ref } from "vue";
+import { onClickOutside } from "@vueuse/core";
+
 import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
-import { computed } from "vue";
 import IconPlus from "~icons/fa6-solid/plus";
+import IconPencil from "~icons/fa6-solid/pencil";
+import IconTrash from "~icons/fa6-solid/trash";
 
 const emit = defineEmits<{
     attach: [point: PointWithScene];
+    delete: [point: PointWithScene];
 }>();
 
 const props = defineProps<{
@@ -14,18 +19,56 @@ const props = defineProps<{
     points: Point[];
 }>();
 
+const selected = ref(false);
+
+const elementRef = ref<HTMLElement | null>(null);
+
+onClickOutside(elementRef, () => {
+    selected.value = false;
+});
+
 const onClickAttach = () => {
     emit("attach", props.point);
+};
+
+const onClickDelete = () => {
+    emit("delete", props.point);
+};
+
+const onToggleSelected = () => {
+    selected.value = !selected.value;
 };
 
 const hasScene = computed(() => !!props.point.scene);
 </script>
 
 <template>
-    <div class="step-point" :class="{ 'step-point--attached': hasScene }">
+    <div
+        class="step-point"
+        ref="elementRef"
+        :class="{ 'step-point--attached': hasScene }"
+    >
         <template v-if="hasScene">
-            <div class="step-point__scene">
+            <div class="step-point__scene relative" @click="onToggleSelected">
                 <img :src="point.scene?.image" />
+
+                <div
+                    class="step-point__buttons absolute flex items-center justify-center gap-x-2 bg-black/25"
+                    v-if="selected"
+                >
+                    <button
+                        class="btn btn--sm btn--primary"
+                        @click="onClickAttach"
+                    >
+                        <IconPencil class="text-sm" />
+                    </button>
+                    <button
+                        class="btn btn--sm btn--danger"
+                        @click="onClickDelete"
+                    >
+                        <IconTrash class="text-sm" />
+                    </button>
+                </div>
             </div>
         </template>
         <template v-else>
@@ -41,3 +84,14 @@ const hasScene = computed(() => !!props.point.scene);
         </template>
     </div>
 </template>
+
+<style scoped lang="scss">
+.step-point {
+    &__buttons {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+</style>
