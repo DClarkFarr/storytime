@@ -197,6 +197,43 @@ router.put("/:id/point/:pointId", async (req: HasSessionRequest, res, next) => {
     }
 });
 
+router.post(
+    "/:id/point/:pointId/action",
+    async (req: HasSessionRequest, res, next) => {
+        const pointsCollection = await getPointsCollection();
+
+        try {
+            const existing = await pointsCollection.findOne({
+                _id: new ObjectId(req.params.pointId),
+                userId: req.user._id,
+                storyId: new ObjectId(req.params.id),
+            });
+
+            if (!existing) {
+                throw new UserError("point not found", 404);
+            }
+
+            const toAdd = {
+                text: "New Action",
+                toPointId: "",
+            };
+
+            const { upsertedId } = await pointsCollection.updateOne(
+                { _id: existing._id },
+                {
+                    $push: {
+                        actions: toAdd,
+                    },
+                }
+            );
+
+            res.json({ row: toAdd });
+        } catch (err) {
+            next(err.message);
+        }
+    }
+);
+
 router.get("/", async (req: HasSessionRequest, res) => {
     const storiesCollection = await getStoriesCollection();
 

@@ -23,8 +23,8 @@ const props = withDefaults(
         onClickOutside?: () => void;
     }>(),
     {
-        clickToClose: false,
-        escToClose: false,
+        clickToClose: true,
+        escToClose: true,
         modalId: "attach-scene-modal",
         show: undefined,
         onOpen: undefined,

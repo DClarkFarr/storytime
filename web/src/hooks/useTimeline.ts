@@ -13,6 +13,7 @@ import usePaginate from "./usePaginate";
 export type UseTimelineProps = {
     timelineRef: Ref<HTMLElement | null>;
     story: StoryWithScenes;
+    stepWidth?: number;
 };
 
 export type UpdatePointData = {
@@ -24,9 +25,9 @@ export type UpdatePointData = {
 
 export type CreatePointData = Pick<Point, "row" | "col">;
 
-const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
+const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
     const VALUES = {
-        stepWidth: 150,
+        stepWidth: stepWidth || 150,
         gapX: 8,
     };
 
@@ -184,6 +185,28 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         setPage(page.value + 1);
     };
 
+    const addPointAction = async (pointId: string) => {
+        const found = points.value.find((p) => p.id === pointId);
+        if (!found) {
+            throw new Error("Point not found");
+        }
+
+        try {
+            const action = await httpClient
+                .post<any, AxiosResponse<{ row: PointAction }>>(
+                    `/story/${story.id}/point/${pointId}/action`
+                )
+                .then(({ data }) => data.row);
+
+            const index = points.value.findIndex((p) => p.id === pointId);
+            found.actions.push(action);
+
+            points.value.splice(index, 1, found);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const pointsByStep = computed(() => {
         return points.value.reduce((acc, p) => {
             if (!acc[p.row]) {
@@ -232,6 +255,7 @@ const useTimeline = ({ timelineRef, story }: UseTimelineProps) => {
         createPoint,
         updatePoint,
         deletePoint,
+        addPointAction,
     };
 };
 

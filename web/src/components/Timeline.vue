@@ -8,13 +8,19 @@ import { useModal } from "vue-final-modal";
 import AttachSceneModal from "./Modals/AttachSceneModal.vue";
 import { Scene } from "@/types/Scene";
 
+const STEP_WIDTH = 175;
+
 const props = defineProps<{
     story: StoryWithScenes;
 }>();
 
 const timelineRef = ref<HTMLElement | null>(null);
 
-const timeline = useTimeline({ timelineRef, story: props.story });
+const timeline = useTimeline({
+    timelineRef,
+    story: props.story,
+    stepWidth: STEP_WIDTH,
+});
 
 const visibleItemIndexes = computed(() => {
     return timeline.paginate.visibleItemIndexes.value;
@@ -51,12 +57,20 @@ const onDeletePoint = (point: PointWithScene) => {
     timeline.deletePoint(point.id);
 };
 
+const onAddPointAction = async (point: PointWithScene) => {
+    await timeline.addPointAction(point.id);
+};
+
 onMounted(() => {
     timeline.init();
 });
 </script>
 <template>
-    <div class="timeline" ref="timelineRef">
+    <div
+        class="timeline"
+        ref="timelineRef"
+        :style="{ '--width': `${STEP_WIDTH}px` }"
+    >
         <div class="timeline__steps p-2 mb-2" ref="timelineStepsRef">
             <div
                 class="timeline__step"
@@ -85,6 +99,7 @@ onMounted(() => {
                                 :points="timeline.points.value"
                                 @attach="onShowAttachPointModal"
                                 @delete="onDeletePoint"
+                                @add-action="onAddPointAction"
                             />
                             <div
                                 class="timeline__step-point timeline__step-point--placeholder"
@@ -150,7 +165,8 @@ onMounted(() => {
     }
 
     &__step {
-        @apply bg-slate-100 rounded w-[150px] flex flex-col self-stretch;
+        width: var(--width);
+        @apply bg-slate-100 rounded flex flex-col self-stretch;
 
         &-heading {
             @apply py-1 bg-slate-300 rounded-t shrink-0;
