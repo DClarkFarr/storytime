@@ -73,6 +73,8 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
             .then(({ data }) => data.row);
 
         setPoints([...points.value, p]);
+
+        return p;
     };
 
     const updatePoint = async (id: string, data: UpdatePointData) => {
@@ -87,7 +89,6 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
 
         points.value.splice(index, 1, p);
 
-        setNumSteps(calculateNumSteps());
         setNumStepPoints(numSalculateStepPoints());
     };
 
@@ -98,7 +99,6 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
 
         points.value.splice(index, 1);
 
-        setNumSteps(calculateNumSteps());
         setNumStepPoints(numSalculateStepPoints());
     };
 
@@ -161,7 +161,8 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
     };
 
     const calculateNumSteps = () => {
-        return Math.max(1, ...points.value.map((p) => p.row));
+        const val = Math.max(1, ...points.value.map((p) => p.row + 1));
+        return val;
     };
 
     const calculateStepsPerPage = (containerWidth: number) => {
@@ -205,6 +206,41 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const getNextColByRow = (row: number, minCol: number = 0) => {
+        const rowPoints = getPointsByStep(row);
+
+        let col = minCol;
+        while (rowPoints.find((p) => p.col === col)) {
+            col = col + 1;
+        }
+
+        return col;
+    };
+
+    const createPointAndAttachToAction = async (
+        point: PointWithScene,
+        actionIndex: number
+    ) => {
+        const needsNewStep = point.row + 1 > numSteps.value - 1;
+        console.log("needs new stopm, from", point.row, "vs", numSteps.value);
+
+        if (needsNewStep) {
+            console.log("adding step");
+            addStep();
+        }
+
+        const newPoint = await createPoint({
+            row: point.row + 1,
+            col: getNextColByRow(point.row + 1, point.col),
+        });
+
+        point.actions[actionIndex].toPointId = newPoint.id;
+
+        await updatePoint(point.id, {
+            actions: point.actions,
+        });
     };
 
     const pointsByStep = computed(() => {
@@ -256,6 +292,7 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         updatePoint,
         deletePoint,
         addPointAction,
+        createPointAndAttachToAction,
     };
 };
 

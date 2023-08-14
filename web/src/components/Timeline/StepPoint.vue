@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
 
 import { Point, PointWithScene, StoryWithScenes } from "@/types/Story";
@@ -12,6 +12,7 @@ const emit = defineEmits<{
     attach: [point: PointWithScene];
     delete: [point: PointWithScene];
     addAction: [point: PointWithScene];
+    editActions: [point: PointWithScene];
 }>();
 
 const props = defineProps<{
@@ -48,8 +49,14 @@ const onToggleAttachSelected = () => {
     attachSelected.value = !attachSelected.value;
 };
 
-const onAddAction = () => {
+const onAddAction = async () => {
     emit("addAction", props.point);
+    await nextTick();
+    emit("editActions", props.point);
+};
+
+const onClickEditActions = () => {
+    emit("editActions", props.point);
 };
 
 const hasScene = computed(() => !!props.point.scene);
@@ -123,15 +130,36 @@ const mappedActions = computed(() => {
                     </div>
                 </div>
 
-                <div class="step-point__actions" v-if="actionsExpanded"></div>
-
-                <div class="step-point__add border-t border-gray-800 pt-2 mt-2">
-                    <button
-                        @click="onAddAction"
-                        class="btn btn--sm btn--primary block w-full"
+                <div
+                    class="step-point__actions select-none"
+                    @click="onClickEditActions"
+                    v-if="actionsExpanded"
+                >
+                    <div
+                        class="step-point__action flex items-center gap-x-2"
+                        v-for="action in mappedActions"
+                        :key="action.position"
+                        :class="{
+                            'step-point__action--attached': !!action.toPointId,
+                        }"
                     >
-                        <IconPlus class="text-sm inline" /> Action
-                    </button>
+                        <div class="text-bold">{{ action.position }}.</div>
+                        <div
+                            class="step-point__action-text w-full truncate text-ellipsis"
+                        >
+                            {{ action.text }}
+                        </div>
+                    </div>
+                    <div
+                        class="step-point__add border-t border-gray-800 pt-2 mt-2"
+                    >
+                        <button
+                            @click="onAddAction"
+                            class="btn btn--sm btn--primary block w-full"
+                        >
+                            <IconPlus class="text-sm inline" /> Action
+                        </button>
+                    </div>
                 </div>
             </div>
         </template>

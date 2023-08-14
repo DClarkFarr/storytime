@@ -7,6 +7,7 @@ import StepPoint from "./Timeline/StepPoint.vue";
 import { useModal } from "vue-final-modal";
 import AttachSceneModal from "./Modals/AttachSceneModal.vue";
 import { Scene } from "@/types/Scene";
+import EditActionsModal from "./Modals/EditActionsModal.vue";
 
 const STEP_WIDTH = 175;
 
@@ -61,6 +62,35 @@ const onAddPointAction = async (point: PointWithScene) => {
     await timeline.addPointAction(point.id);
 };
 
+const editActionsModal = useModal({
+    component: EditActionsModal,
+    attrs: {
+        point: null,
+        onCancel: () => {
+            editActionsModal.close();
+        },
+        onChange: (point: PointWithScene) => {
+            timeline.updatePoint(point.id, {
+                actions: point.actions,
+            });
+        },
+        onAdd: (point: PointWithScene) => {
+            onAddPointAction(point);
+        },
+        onCreateNext: (point: PointWithScene, actionIndex: number) => {
+            timeline.createPointAndAttachToAction(point, actionIndex);
+        },
+    },
+});
+const onEditPointActions = async (point: PointWithScene) => {
+    editActionsModal.patchOptions({
+        attrs: {
+            point,
+        },
+    });
+    await editActionsModal.open();
+};
+
 onMounted(() => {
     timeline.init();
 });
@@ -100,12 +130,26 @@ onMounted(() => {
                                 @attach="onShowAttachPointModal"
                                 @delete="onDeletePoint"
                                 @add-action="onAddPointAction"
+                                @edit-actions="onEditPointActions"
                             />
                             <div
                                 class="timeline__step-point timeline__step-point--placeholder"
                                 v-else
                             >
-                                <div v-if="stepIndex > 0">show button!</div>
+                                <div v-if="stepIndex > 0">
+                                    <button
+                                        class="btn btn--light block w-full"
+                                        @click="
+                                            timeline.createPoint({
+                                                row: stepIndex,
+                                                col: colIndex,
+                                            })
+                                        "
+                                    >
+                                        <IconPlus class="text-xs inline" />
+                                        Add Point
+                                    </button>
+                                </div>
                                 <div v-else></div>
                             </div>
                         </div>
