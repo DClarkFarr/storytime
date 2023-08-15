@@ -4,8 +4,11 @@ import { VueFinalModal } from "vue-final-modal";
 import { VueDraggableNext as Draggable } from "vue-draggable-next";
 import IconBars from "~icons/fa6-solid/bars";
 import IconPlus from "~icons/fa6-solid/plus";
+import IconMinus from "~icons/fa6-solid/minus";
 import Dropdown from "../controls/Dropdown.vue";
 import { debounce } from "lodash-es";
+import PointItemHorizontal from "../Scene/PointItemHorizontal.vue";
+import { computed } from "vue";
 
 const emit = defineEmits<{
     cancel: [];
@@ -57,7 +60,38 @@ const onSave = () => {
     emit("change", props.point as PointWithScene);
 };
 
+const onSelectPoint = (actionIndex: number, selectedPoint: PointWithScene) => {
+    if (!props.point) {
+        return;
+    }
+
+    const point = props.point as PointWithScene;
+    point.actions[actionIndex].toPointId = selectedPoint.id;
+
+    emit("change", point as PointWithScene);
+};
+
 const debounceOnSave = debounce(onSave, 500);
+
+const onRemoveNextPoint = (actionIndex: number) => {
+    const point = props.point as PointWithScene;
+    point.actions[actionIndex].toPointId = "";
+
+    emit("change", point as PointWithScene);
+};
+
+const actionPoints = computed(() => {
+    if (!props.point) {
+        return [];
+    }
+    return props.point.actions.map((a) => {
+        if (!a.toPointId) {
+            return null;
+        }
+
+        return props.futurePoints.find((p) => p.id === a.toPointId) || null;
+    });
+});
 </script>
 
 <template>
@@ -134,63 +168,64 @@ const debounceOnSave = debounce(onSave, 500);
                                     {{ index + 1 }}.
                                 </div>
                             </div>
-                            <div class="grow">
-                                <input
+                            <div class="w-1/2">
+                                <textarea
                                     type="text"
                                     class="input w-full"
                                     v-model="point.actions[index].text"
                                     @input="debounceOnSave"
-                                />
+                                ></textarea>
                             </div>
-                            <div>
-                                <Dropdown text="Next Scene" pane-width="400px">
+                            <div class="ml-auto">
+                                <Dropdown
+                                    v-if="!actionPoints[index]"
+                                    text="Next Scene"
+                                    pane-width="400px"
+                                    align="right"
+                                >
                                     <template #default="{ close }">
                                         <div
                                             class="flex flex-col gap-y-2"
                                             @click="close"
                                         >
-                                            <div
-                                                class="future-point flex gap-x-2 p-1 items-center bg-gray-100"
+                                            <PointItemHorizontal
                                                 v-for="fPoint in futurePoints"
                                                 :key="fPoint.id"
+                                                :point="fPoint"
+                                                @click="
+                                                    onSelectPoint(index, fPoint)
+                                                "
                                             >
-                                                <div class="font-semibold">
-                                                    Step {{ fPoint.row + 1 }}
-                                                </div>
-                                                <template v-if="point.scene">
-                                                    <div>
-                                                        <img
-                                                            class="w-[50px] rounded"
-                                                            :src="
-                                                                fPoint.scene
-                                                                    ?.image
-                                                            "
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        {{ fPoint.scene?.name }}
-                                                    </div>
-                                                </template>
-                                                <template v-else>
-                                                    <div>
-                                                        Point
-                                                        {{ fPoint.col + 1 }}
-                                                    </div>
-                                                </template>
-                                            </div>
+                                            </PointItemHorizontal>
+                                            <button
+                                                v-if="!action.toPointId"
+                                                class="btn btn--light block w-full"
+                                                @click="onAddToNext(index)"
+                                            >
+                                                <IconPlus
+                                                    class="inline-block text-xs"
+                                                />
+                                                Add to next step
+                                            </button>
                                         </div>
-                                        <button
-                                            v-if="!action.toPointId"
-                                            class="btn btn--light block w-full"
-                                            @click="onAddToNext(index)"
-                                        >
-                                            <IconPlus
-                                                class="inline-block text-xs"
-                                            />
-                                            Add to next step
-                                        </button>
                                     </template>
                                 </Dropdown>
+                                <div v-else>
+                                    <PointItemHorizontal
+                                        :point="(actionPoints[index] as PointWithScene)"
+                                    >
+                                        <template #actions>
+                                            <button
+                                                class="btn btn--danger"
+                                                @click="
+                                                    onRemoveNextPoint(index)
+                                                "
+                                            >
+                                                <IconMinus class="text-xs" />
+                                            </button>
+                                        </template>
+                                    </PointItemHorizontal>
+                                </div>
                             </div>
                         </div>
                     </Draggable>

@@ -8,11 +8,13 @@ const props = withDefaults(
         text?: string;
         open?: boolean;
         paneWidth?: string;
+        align?: "left" | "right";
     }>(),
     {
         text: "Dropdown",
         open: false,
         paneWidth: "100%",
+        align: "left",
     }
 );
 
@@ -68,7 +70,7 @@ const stateProps = computed(() => {
     <div
         class="dropdown relative"
         ref="dropdown"
-        :class="{ 'dropdown--open': isOpen }"
+        :class="[`dropdown--${align}`, { 'dropdown--open': isOpen }]"
     >
         <div class="dropdown__toggle">
             <slot name="button" v-bind="stateProps">
@@ -105,6 +107,14 @@ const stateProps = computed(() => {
 
     :deep() &__item {
         @apply py-1 px-2 block w-full text-left cursor-pointer hover:bg-gray-100 text-black border border-sky-500 mb-1;
+    }
+
+    &--right {
+        .dropdown {
+            &__pane {
+                right: 0;
+            }
+        }
     }
 }
 </style>
