@@ -256,6 +256,28 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         });
     };
 
+    const getFuturePoints = (point: Point) => {
+        const futurePoints = points.value
+            .filter((p) => {
+                return p.row > point.row;
+            })
+            .map((p) => {
+                return {
+                    ...p,
+                    scene: story.scenes.find((s) => s.id === p.sceneId) || null,
+                } as PointWithScene;
+            });
+
+        futurePoints.sort((a, b) => {
+            if (a.row === b.row) {
+                return a.col - b.col;
+            }
+            return a.row - b.row;
+        });
+
+        return futurePoints;
+    };
+
     const pointsByStep = computed(() => {
         return points.value.reduce((acc, p) => {
             if (!acc[p.row]) {
@@ -286,8 +308,6 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
     });
 
     const piontLinesMap = computed(() => {
-        console.log("computing visibile lines map", visibleItemIndexes.value);
-
         const map: MappedLineStep[] = [];
 
         visibleItemIndexes.value.forEach((stepIndex) => {
@@ -356,6 +376,7 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         deletePoint,
         addPointAction,
         createPointAndAttachToAction,
+        getFuturePoints,
     };
 };
 

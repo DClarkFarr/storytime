@@ -63,6 +63,7 @@ const editActionsModal = useModal({
     component: EditActionsModal,
     attrs: {
         point: null,
+        futurePoints: [],
         onCancel: () => {
             editActionsModal.close();
         },
@@ -83,6 +84,7 @@ const onEditPointActions = async (point: PointWithScene) => {
     editActionsModal.patchOptions({
         attrs: {
             point,
+            futurePoints: timeline.getFuturePoints(point),
         },
     });
     await editActionsModal.open();

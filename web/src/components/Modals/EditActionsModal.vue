@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { PointWithScene } from "@/types/Story";
+import { Point, PointWithScene } from "@/types/Story";
 import { VueFinalModal } from "vue-final-modal";
 import { VueDraggableNext as Draggable } from "vue-draggable-next";
 import IconBars from "~icons/fa6-solid/bars";
@@ -17,6 +17,7 @@ const emit = defineEmits<{
 const props = withDefaults(
     defineProps<{
         point: PointWithScene | null;
+        futurePoints: PointWithScene[];
         clickToClose?: boolean;
         escToClose?: boolean;
         modalId?: string;
@@ -144,7 +145,40 @@ const debounceOnSave = debounce(onSave, 500);
                             <div>
                                 <Dropdown text="Next Scene" pane-width="400px">
                                     <template #default="{ close }">
-                                        <div @click="close"></div>
+                                        <div
+                                            class="flex flex-col gap-y-2"
+                                            @click="close"
+                                        >
+                                            <div
+                                                class="future-point flex gap-x-2 p-1 items-center bg-gray-100"
+                                                v-for="fPoint in futurePoints"
+                                                :key="fPoint.id"
+                                            >
+                                                <div class="font-semibold">
+                                                    Step {{ fPoint.row + 1 }}
+                                                </div>
+                                                <template v-if="point.scene">
+                                                    <div>
+                                                        <img
+                                                            class="w-[50px] rounded"
+                                                            :src="
+                                                                fPoint.scene
+                                                                    ?.image
+                                                            "
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        {{ fPoint.scene?.name }}
+                                                    </div>
+                                                </template>
+                                                <template v-else>
+                                                    <div>
+                                                        Point
+                                                        {{ fPoint.col + 1 }}
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
                                         <button
                                             v-if="!action.toPointId"
                                             class="btn btn--light block w-full"
