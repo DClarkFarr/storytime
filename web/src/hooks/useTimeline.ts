@@ -23,6 +23,19 @@ export type UpdatePointData = {
     actions?: PointAction[];
 };
 
+export type MappedLineAction = {
+    actionIndex: number;
+    toPointId: string;
+};
+export type MappedLinePoint = {
+    pointId: string;
+    actions: MappedLineAction[];
+};
+export type MappedLineStep = {
+    stepIndex: number;
+    points: MappedLinePoint[];
+};
+
 export type CreatePointData = Pick<Point, "row" | "col">;
 
 const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
@@ -268,6 +281,54 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         return grid;
     });
 
+    const visibleItemIndexes = computed(() => {
+        return paginate.visibleItemIndexes.value;
+    });
+
+    const piontLinesMap = computed(() => {
+        console.log("computing visibile lines map", visibleItemIndexes.value);
+
+        const map: MappedLineStep[] = [];
+
+        visibleItemIndexes.value.forEach((stepIndex) => {
+            const stepPoints = pointsByStep.value[stepIndex];
+            if (!stepPoints) {
+                return;
+            }
+
+            const stepObj: MappedLineStep = {
+                stepIndex,
+                points: [],
+            };
+
+            stepPoints.forEach((point) => {
+                const pointObj: MappedLinePoint = {
+                    pointId: point.id,
+                    actions: [],
+                };
+                point.actions.forEach((action, i) => {
+                    if (!action.toPointId) {
+                        return;
+                    }
+
+                    pointObj.actions.push({
+                        actionIndex: i,
+                        toPointId: action.toPointId,
+                    });
+                });
+
+                if (pointObj.actions.length) {
+                    stepObj.points.push(pointObj);
+                }
+            });
+            if (stepObj.points.length) {
+                map.push(stepObj);
+            }
+        });
+
+        return map;
+    });
+
     return {
         numSteps,
         numStepPoints,
@@ -277,6 +338,8 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         paginate,
         pointsByStep,
         pointsGrid,
+        visibleItemIndexes,
+        piontLinesMap,
         prevPage,
         nextPage,
         setPoints,

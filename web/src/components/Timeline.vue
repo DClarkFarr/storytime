@@ -8,6 +8,7 @@ import { useModal } from "vue-final-modal";
 import AttachSceneModal from "./Modals/AttachSceneModal.vue";
 import { Scene } from "@/types/Scene";
 import EditActionsModal from "./Modals/EditActionsModal.vue";
+import { getColors } from "@/methods/colors";
 
 const STEP_WIDTH = 175;
 
@@ -21,10 +22,6 @@ const timeline = useTimeline({
     timelineRef,
     story: props.story,
     stepWidth: STEP_WIDTH,
-});
-
-const visibleItemIndexes = computed(() => {
-    return timeline.paginate.visibleItemIndexes.value;
 });
 
 const attachSceneModal = useModal({
@@ -97,15 +94,16 @@ onMounted(() => {
 </script>
 <template>
     <div
-        class="timeline"
+        class="timeline relative"
         ref="timelineRef"
         :style="{ '--width': `${STEP_WIDTH}px` }"
     >
         <div class="timeline__steps p-2 mb-2" ref="timelineStepsRef">
             <div
                 class="timeline__step"
-                v-for="stepIndex in visibleItemIndexes"
+                v-for="stepIndex in timeline.visibleItemIndexes.value"
                 :key="stepIndex"
+                :data-step="stepIndex"
             >
                 <div
                     class="timeline__step-heading text-center leading-none font-semibold"
@@ -127,6 +125,7 @@ onMounted(() => {
                                 :step="stepIndex"
                                 :story="story"
                                 :points="timeline.points.value"
+                                :data-point="col.id"
                                 @attach="onShowAttachPointModal"
                                 @delete="onDeletePoint"
                                 @add-action="onAddPointAction"
@@ -150,7 +149,6 @@ onMounted(() => {
                                         Add Point
                                     </button>
                                 </div>
-                                <div v-else></div>
                             </div>
                         </div>
                     </div>
@@ -158,7 +156,10 @@ onMounted(() => {
             </div>
             <div
                 class="timeline__step timeline__step--add flex flex-col justify-center items-center"
-                v-if="visibleItemIndexes.length < timeline.stepsPerPage.value"
+                v-if="
+                    timeline.visibleItemIndexes.value.length <
+                    timeline.stepsPerPage.value
+                "
                 @click="timeline.addStep"
             >
                 <div>
@@ -192,9 +193,15 @@ onMounted(() => {
                 Page {{ timeline.page.value }} of
                 {{ timeline.paginate.pages.value }}, showing steps
                 {{ timeline.paginate.offset.value + 1 }} -
-                {{ timeline.paginate.offset.value + visibleItemIndexes.length }}
+                {{
+                    timeline.paginate.offset.value +
+                    timeline.visibleItemIndexes.value.length
+                }}
                 of {{ timeline.numSteps }}
             </div>
+            <pre>
+                {{ timeline.piontLinesMap.value }}
+            </pre>
         </div>
     </div>
 </template>

@@ -139,6 +139,7 @@ const mappedActions = computed(() => {
                         class="step-point__action flex items-center gap-x-2"
                         v-for="action in mappedActions"
                         :key="action.position"
+                        :data-action="action.position"
                         :class="{
                             'step-point__action--attached': !!action.toPointId,
                         }"
