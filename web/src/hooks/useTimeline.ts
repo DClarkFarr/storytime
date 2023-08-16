@@ -29,6 +29,7 @@ export type MappedLineAction = {
 };
 export type MappedLinePoint = {
     pointId: string;
+    expanded: boolean;
     actions: MappedLineAction[];
 };
 export type MappedLineStep = {
@@ -50,12 +51,27 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
     const page = ref(1);
     const points = ref<Point[]>([]);
 
+    const pointsExpandedIds = ref<string[]>([]);
+
     const paginate = usePaginate({
         page,
         perPage: stepsPerPage,
         items: numSteps,
         staticItems: 1,
     });
+
+    const setPointExpanded = (id: string, expanded: boolean) => {
+        const index = pointsExpandedIds.value.findIndex((i) => i === id);
+        if (expanded && index === -1) {
+            pointsExpandedIds.value.push(id);
+        } else if (!expanded && index > -1) {
+            pointsExpandedIds.value.splice(index, 1);
+        }
+    };
+
+    const isPointExpanded = (id: string) => {
+        return pointsExpandedIds.value.findIndex((i) => i === id) > -1;
+    };
 
     const setPage = (p: number) => {
         page.value = p;
@@ -325,6 +341,7 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
                 const pointObj: MappedLinePoint = {
                     pointId: point.id,
                     actions: [],
+                    expanded: isPointExpanded(point.id),
                 };
                 point.actions.forEach((action, i) => {
                     if (!action.toPointId) {
@@ -360,6 +377,9 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         pointsGrid,
         visibleItemIndexes,
         piontLinesMap,
+        pointsExpandedIds,
+        setPointExpanded,
+        isPointExpanded,
         prevPage,
         nextPage,
         setPoints,

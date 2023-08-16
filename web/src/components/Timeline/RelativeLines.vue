@@ -73,6 +73,27 @@ const drawPointLines = (
     });
 };
 
+const getContainerPosition = (fromCoords: Coords) => {
+    const containerRect = (
+        props.container as HTMLDivElement
+    ).getBoundingClientRect();
+
+    const pointRight = {
+        y: fromCoords.y,
+        x: containerRect.left + 5,
+    };
+    const pointLeft = {
+        y: fromCoords.y,
+        x: containerRect.right - 5,
+    };
+
+    return {
+        rect: containerRect,
+        pointLeft,
+        pointRight,
+    };
+};
+
 const drawActionLine = (
     { actionIndex, toPointId }: MappedLineAction,
     actionsTarget: HTMLDivElement | null,
@@ -80,36 +101,23 @@ const drawActionLine = (
 ) => {
     const fromTarget = actionsTarget
         ? (actionsTarget.querySelector(
-              `.step-point__action[data-action=${actionIndex}]`
+              `.step-point__action[data-action="${actionIndex}"]`
           ) as HTMLDivElement)
         : fallbackTarget;
-    const toTarget = props.container?.querySelector(
+    const toParent = props.container?.querySelector(
         `.step-point[data-point="${toPointId}"]`
     );
 
     const fromCoords = getElementCoords(fromTarget);
-    const toCoords = getElementCoords(toTarget as HTMLDivElement);
+    const toTarget =
+        toParent?.querySelector(".step-point__scene") || toParent || null;
 
-    const { degree, slope } = calcSlope(
-        fromCoords.pointRight,
-        toCoords.pointLeft
-    );
+    const toCoords = toTarget
+        ? getElementCoords(toTarget as HTMLDivElement)
+        : getContainerPosition(fromCoords.pointRight);
+
+    const { degree } = calcSlope(fromCoords.pointRight, toCoords.pointLeft);
     const width = calcDistance(fromCoords.pointRight, toCoords.pointLeft);
-
-    console.log(
-        "degree",
-        degree,
-        "width",
-        toCoords.pointLeft.x - fromCoords.pointRight.x,
-        "calc distance",
-        width,
-        "from",
-        fromCoords.pointRight,
-        "to",
-        toCoords.pointLeft,
-        "slope",
-        slope
-    );
 
     const line = document.createElement("div");
     line.classList.add("line");
@@ -134,12 +142,15 @@ const drawActionLine = (
 
     line.appendChild(startBubble);
     line.appendChild(lineLine);
-    line.appendChild(endBubble);
+
+    if (toTarget) {
+        line.appendChild(endBubble);
+    }
 
     elementRef.value?.appendChild(line);
 };
 
-const debounceDrawLines = debounce(drawLines, 400);
+const debounceDrawLines = debounce(drawLines, 100);
 
 const getElementCoords = (element: HTMLDivElement) => {
     const containerRect = (
@@ -147,6 +158,7 @@ const getElementCoords = (element: HTMLDivElement) => {
     ).getBoundingClientRect();
 
     const rect = element.getBoundingClientRect();
+
     const pointLeft = {
         y: rect.top - containerRect.top + rect.height / 2,
         x: rect.left + 5,

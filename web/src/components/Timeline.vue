@@ -90,6 +90,10 @@ const onEditPointActions = async (point: PointWithScene) => {
     await editActionsModal.open();
 };
 
+const onTogglePointExpanded = (point: PointWithScene, expanded: boolean) => {
+    timeline.setPointExpanded(point.id, expanded);
+};
+
 onMounted(() => {
     timeline.init();
 });
@@ -132,6 +136,8 @@ onMounted(() => {
                                 :story="story"
                                 :points="timeline.points.value"
                                 :data-point="col.id"
+                                :expanded="timeline.isPointExpanded(col.id)"
+                                @expand="onTogglePointExpanded"
                                 @attach="onShowAttachPointModal"
                                 @delete="onDeletePoint"
                                 @add-action="onAddPointAction"

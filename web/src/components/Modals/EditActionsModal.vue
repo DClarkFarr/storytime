@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Point, PointWithScene } from "@/types/Story";
+import { PointWithScene } from "@/types/Story";
 import { VueFinalModal } from "vue-final-modal";
 import { VueDraggableNext as Draggable } from "vue-draggable-next";
 import IconBars from "~icons/fa6-solid/bars";

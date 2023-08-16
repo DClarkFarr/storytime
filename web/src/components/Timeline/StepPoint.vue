@@ -13,9 +13,11 @@ const emit = defineEmits<{
     delete: [point: PointWithScene];
     addAction: [point: PointWithScene];
     editActions: [point: PointWithScene];
+    expand: [point: PointWithScene, expanded: boolean];
 }>();
 
 const props = defineProps<{
+    expanded: boolean;
     step: number;
     story: StoryWithScenes;
     point: PointWithScene;
@@ -24,13 +26,10 @@ const props = defineProps<{
 
 const attachSelected = ref(false);
 
-const actionsExpanded = ref(false);
-
 const elementRef = ref<HTMLElement | null>(null);
 
 onClickOutside(elementRef, () => {
     attachSelected.value = false;
-    actionsExpanded.value = false;
 });
 
 const onClickAttach = () => {
@@ -42,7 +41,7 @@ const onClickDelete = () => {
 };
 
 const onToggleActionsExpanded = () => {
-    actionsExpanded.value = !actionsExpanded.value;
+    emit("expand", props.point, !props.expanded);
 };
 
 const onToggleAttachSelected = () => {
@@ -125,7 +124,7 @@ const mappedActions = computed(() => {
                     <div>
                         <IconCaretDown
                             class="text-sm"
-                            :class="{ 'rotate-90': actionsExpanded }"
+                            :class="{ 'rotate-90': expanded }"
                         />
                     </div>
                 </div>
@@ -133,13 +132,13 @@ const mappedActions = computed(() => {
                 <div
                     class="step-point__actions select-none"
                     @click="onClickEditActions"
-                    v-if="actionsExpanded"
+                    v-if="expanded"
                 >
                     <div
                         class="step-point__action flex items-center gap-x-2"
                         v-for="action in mappedActions"
                         :key="action.position"
-                        :data-action="action.position"
+                        :data-action="action.position - 1"
                         :class="{
                             'step-point__action--attached': !!action.toPointId,
                         }"

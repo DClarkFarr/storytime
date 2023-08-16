@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import IconPlus from "~icons/fa6-solid/plus";
 import IconSpinner from "~icons/fa6-solid/spinner";
+import IconCaretLeft from "~icons/fa6-solid/caret-left";
 
 const router = useRouter();
 const route = useRoute();
@@ -59,6 +60,17 @@ onMounted(() => {
             <div class="flex flex items-center">
                 <div>
                     <h1 class="text-xl font-semibold">Story Editor</h1>
+                </div>
+                <div class="ml-3">
+                    <RouterLink
+                        class="btn btn--light"
+                        :to="{
+                            name: 'home',
+                        }"
+                    >
+                        <IconCaretLeft class="text-xs inline" />
+                        Back
+                    </RouterLink>
                 </div>
                 <div class="ml-auto">
                     <button
