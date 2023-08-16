@@ -55,13 +55,10 @@ onMounted(() => {
 <template>
     <div class="edit-story">
         <div
-            class="edit-story__header bg-slate-300 border border-slate-500 p-4 mb-8"
+            class="edit-story__header bg-slate-200 border border-slate-500 p-4 mb-8"
         >
-            <div class="flex flex items-center">
+            <div class="flex flex items-center gap-x-3">
                 <div>
-                    <h1 class="text-xl font-semibold">Story Editor</h1>
-                </div>
-                <div class="ml-3">
                     <RouterLink
                         class="btn btn--light"
                         :to="{
@@ -72,6 +69,15 @@ onMounted(() => {
                         Back
                     </RouterLink>
                 </div>
+                <div>
+                    <h1 class="text-2xl font-semibold">Story Editor</h1>
+                </div>
+                <div v-if="story">
+                    <h2 class="font-bold text-xl text-gray-700">
+                        {{ story.name }}
+                    </h2>
+                </div>
+
                 <div class="ml-auto">
                     <button
                         class="btn btn--primary"

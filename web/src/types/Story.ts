@@ -5,7 +5,7 @@ export type Story = {
     userId: string;
     name: string;
     description: string;
-    createdAt: Date;
+    createdAt: string;
 };
 
 export type StoryWithScenes<T extends Scene = Scene> = Story & {
