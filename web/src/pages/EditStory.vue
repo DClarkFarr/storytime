@@ -3,12 +3,13 @@ import SceneThumbnail from "@/components/Scene/SceneThumbnail.vue";
 import Timeline from "@/components/Timeline.vue";
 import httpClient from "@/services/httpClient";
 import { StoryWithScenes } from "@/types/Story";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import IconPlus from "~icons/fa6-solid/plus";
 import IconSpinner from "~icons/fa6-solid/spinner";
 import IconCaretLeft from "~icons/fa6-solid/caret-left";
+import IconPencil from "~icons/fa6-solid/pencil";
 
 const router = useRouter();
 const route = useRoute();
@@ -16,6 +17,11 @@ const isLoading = ref(false);
 const story = ref<StoryWithScenes | null>(null);
 
 const creatingScene = ref(false);
+
+const editName = ref(false);
+const editDescription = ref(false);
+
+const nameRef = ref<HTMLInputElement | null>(null);
 
 const onCreateScene = () => {
     creatingScene.value = true;
@@ -48,6 +54,37 @@ const loadStory = async (id: string) => {
     isLoading.value = false;
 };
 
+const saveStory = () => {
+    return httpClient
+        .put(`/story/${story.value?.id}`, {
+            name: story.value?.name,
+            description: story.value?.description,
+        })
+        .then((response) => response.data.row);
+};
+
+const onBlurName = () => {
+    editName.value = false;
+    saveStory();
+};
+
+const onBlurDescription = () => {
+    editDescription.value = false;
+    saveStory();
+};
+
+const onEditName = async () => {
+    editName.value = true;
+    await nextTick();
+    nameRef.value?.focus();
+};
+
+const onEditDescription = async () => {
+    editDescription.value = true;
+    await nextTick();
+    nameRef.value?.focus();
+};
+
 onMounted(() => {
     loadStory(route.params.id.toString());
 });
@@ -72,10 +109,28 @@ onMounted(() => {
                 <div>
                     <h1 class="text-2xl font-semibold">Story Editor</h1>
                 </div>
-                <div v-if="story">
-                    <h2 class="font-bold text-xl text-gray-700">
-                        {{ story.name }}
-                    </h2>
+                <div v-if="story" class="ml-2">
+                    <div v-if="!editName" @click="onEditName">
+                        <div
+                            class="flex items-center gap-x-2 cursor-pointer px-2 py-1 hover:bg-white rounded"
+                        >
+                            <h2 class="font-bold text-xl text-gray-700">
+                                {{ story.name }}
+                            </h2>
+                            <div>
+                                <IconPencil class="text-xs" />
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <input
+                            type="text"
+                            class="input text-lg"
+                            ref="nameRef"
+                            v-model="story.name"
+                            @blur="onBlurName"
+                        />
+                    </div>
                 </div>
 
                 <div class="ml-auto">
@@ -97,21 +152,56 @@ onMounted(() => {
             </div>
         </div>
 
+        <div
+            class="edit-story__description mx-auto mb-8 px-4 max-w-[1600px]"
+            v-if="story"
+        >
+            <h3 class="font-semibold">Description</h3>
+            <div
+                class="text-gray-700 hover:bg-gray-100 p-2 cursor-pointer"
+                @click="onEditDescription"
+                v-if="!editDescription"
+            >
+                {{ story?.description }}
+                <span class="pl-3">
+                    <IconPencil class="text-xs inline" />
+                </span>
+            </div>
+            <div v-else>
+                <textarea
+                    ref="descriptionRef"
+                    class="input"
+                    rows="8"
+                    v-model="story.description"
+                    @blur="onBlurDescription"
+                ></textarea>
+            </div>
+        </div>
+
         <div class="edit-story__content mx-auto px-4 max-w-[1600px]">
             <h3 class="font-semibold">Scenes</h3>
-            <div class="scenes grid gap-3 mb-8">
-                <RouterLink
-                    class="block"
-                    :to="{
-                        name: 'scene.edit',
-                        params: { storyId: story?.id, id: scene.id },
-                    }"
-                    v-for="scene in story?.scenes"
-                    :key="scene.id"
+            <div class="scenes mb-8">
+                <div class="grid gap-3">
+                    <RouterLink
+                        class="block"
+                        :to="{
+                            name: 'scene.edit',
+                            params: { storyId: story?.id, id: scene.id },
+                        }"
+                        v-for="scene in story?.scenes"
+                        :key="scene.id"
+                    >
+                        <SceneThumbnail :scene="scene" class="h-full" />
+                    </RouterLink>
+                </div>
+                <div
+                    v-if="story && !story.scenes.length"
+                    class="p-4 bg-sky-200 border border-sky-600 text-sky-700"
                 >
-                    <SceneThumbnail :scene="scene" class="h-full" />
-                </RouterLink>
+                    No scenes yet. Create one!
+                </div>
             </div>
+
             <h3 class="font-semibold">Construct Timeline</h3>
             <div class="timeline" v-if="story">
                 <Timeline :story="story" />
@@ -121,7 +211,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.scenes.grid {
+.scenes .grid {
     grid-template-columns: repeat(auto-fill, 250px);
 }
 </style>

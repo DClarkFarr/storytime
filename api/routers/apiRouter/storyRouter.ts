@@ -34,6 +34,42 @@ router.get("/:id", async (req: HasSessionRequest, res) => {
     res.json({ row: toStoryObject(populatedStory) });
 });
 
+router.put("/:id", async (req: HasSessionRequest, res, next) => {
+    const storiesCollection = await getStoriesCollection();
+
+    const name = req.body.name;
+    const description = req.body.description;
+
+    try {
+        const story = await storiesCollection.findOne({
+            userId: req.user._id,
+            _id: new ObjectId(req.params.id),
+        });
+
+        if (!story) {
+            throw new UserError("Story not found", 404);
+        }
+
+        if (!name || !description) {
+            throw new UserError("Invalid name or description", 400);
+        }
+
+        await storiesCollection.updateOne(
+            { _id: story._id },
+            {
+                $set: {
+                    name,
+                    description,
+                },
+            }
+        );
+
+        res.json({ row: toStoryObject({ ...story, name, description }) });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.post("/:id/scene", async (req: HasSessionRequest, res, next) => {
     const scenesCollection = await getScenesCollection();
 
