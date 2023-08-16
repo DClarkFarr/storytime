@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import useTimeline from "@/hooks/useTimeline";
 import { PointWithScene, StoryWithScenes } from "@/types/Story";
 import IconPlus from "~icons/fa6-solid/plus";
@@ -8,7 +8,7 @@ import { useModal } from "vue-final-modal";
 import AttachSceneModal from "./Modals/AttachSceneModal.vue";
 import { Scene } from "@/types/Scene";
 import EditActionsModal from "./Modals/EditActionsModal.vue";
-import { getColors } from "@/methods/colors";
+import RelativeLines from "./Timeline/RelativeLines.vue";
 
 const STEP_WIDTH = 175;
 
@@ -16,7 +16,7 @@ const props = defineProps<{
     story: StoryWithScenes;
 }>();
 
-const timelineRef = ref<HTMLElement | null>(null);
+const timelineRef = ref<HTMLDivElement | null>(null);
 
 const timeline = useTimeline({
     timelineRef,
@@ -100,6 +100,10 @@ onMounted(() => {
         ref="timelineRef"
         :style="{ '--width': `${STEP_WIDTH}px` }"
     >
+        <RelativeLines
+            :container="timelineRef"
+            :point-lines="timeline.piontLinesMap.value"
+        />
         <div class="timeline__steps p-2 mb-2" ref="timelineStepsRef">
             <div
                 class="timeline__step"
@@ -201,9 +205,6 @@ onMounted(() => {
                 }}
                 of {{ timeline.numSteps }}
             </div>
-            <pre>
-                {{ timeline.piontLinesMap.value }}
-            </pre>
         </div>
     </div>
 </template>
