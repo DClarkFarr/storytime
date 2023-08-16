@@ -101,4 +101,11 @@ const onCancel = () => {
 .grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
+
+.modal {
+    &__content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
 </style>

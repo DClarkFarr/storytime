@@ -161,11 +161,11 @@ const getElementCoords = (element: HTMLDivElement) => {
 
     const pointLeft = {
         y: rect.top - containerRect.top + rect.height / 2,
-        x: rect.left + 5,
+        x: rect.left - 5,
     };
     const pointRight = {
         y: rect.top - containerRect.top + rect.height / 2,
-        x: rect.right - 5,
+        x: rect.right - 10,
     };
 
     return {

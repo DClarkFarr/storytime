@@ -8,9 +8,13 @@ import {
     getStoriesCollection,
 } from "../../db/collections";
 import DbError from "../../errors/DbError";
-import { toStoryObject, populateStoryScenes } from "../../db/story";
+import {
+    toStoryObject,
+    populateStoryScenes,
+    duplicateStory,
+} from "../../db/story";
 import UserError from "../../errors/UserError";
-import { toSceneObject } from "../../db/scene";
+import { duplicateScene, toSceneObject } from "../../db/scene";
 import { toPointObject } from "../../db/point";
 
 const router = Router();
@@ -98,6 +102,36 @@ router.post("/:id/scene", async (req: HasSessionRequest, res, next) => {
         next(err);
     }
 });
+
+/**
+ * Duplicate a scene
+ */
+
+router.post(
+    "/:storyId/scene/:id/copy",
+    async (req: HasSessionRequest, res, next) => {
+        const scenesCollection = await getScenesCollection();
+
+        try {
+            const scene = await scenesCollection.findOne({
+                userId: req.user._id,
+                _id: new ObjectId(req.params.id),
+            });
+
+            if (!scene) {
+                throw new UserError("Scene not found", 404);
+            }
+
+            const copiedScene = await duplicateScene(scene);
+
+            res.json({
+                row: toSceneObject(copiedScene),
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
 
 /**
  * Get story points

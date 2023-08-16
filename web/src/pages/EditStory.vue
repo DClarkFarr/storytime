@@ -10,6 +10,8 @@ import IconPlus from "~icons/fa6-solid/plus";
 import IconSpinner from "~icons/fa6-solid/spinner";
 import IconCaretLeft from "~icons/fa6-solid/caret-left";
 import IconPencil from "~icons/fa6-solid/pencil";
+import IconCopy from "~icons/fa6-solid/copy";
+import { Scene } from "@/types/Scene";
 
 const router = useRouter();
 const route = useRoute();
@@ -83,6 +85,20 @@ const onEditDescription = async () => {
     editDescription.value = true;
     await nextTick();
     nameRef.value?.focus();
+};
+
+const onClickCopyScene = async (scene: Scene) => {
+    httpClient
+        .post(`/story/${story.value?.id}/scene/${scene.id}/copy`)
+        .then((response) => {
+            router.push({
+                name: "scene.edit",
+                params: {
+                    id: response.data.row.id,
+                    storyId: story.value?.id,
+                },
+            });
+        });
 };
 
 onMounted(() => {
@@ -182,17 +198,39 @@ onMounted(() => {
             <h3 class="font-semibold">Scenes</h3>
             <div class="scenes mb-8">
                 <div class="grid gap-3">
-                    <RouterLink
-                        class="block"
-                        :to="{
-                            name: 'scene.edit',
-                            params: { storyId: story?.id, id: scene.id },
-                        }"
+                    <SceneThumbnail
                         v-for="scene in story?.scenes"
                         :key="scene.id"
+                        :scene="scene"
+                        class="h-full"
                     >
-                        <SceneThumbnail :scene="scene" class="h-full" />
-                    </RouterLink>
+                        <template #actions>
+                            <div>
+                                <button
+                                    class="btn btn--light"
+                                    @click.stop.prevent="
+                                        onClickCopyScene(scene)
+                                    "
+                                >
+                                    <IconCopy class="text-sm" />
+                                </button>
+                            </div>
+                            <div>
+                                <RouterLink
+                                    class="btn btn--primary"
+                                    :to="{
+                                        name: 'scene.edit',
+                                        params: {
+                                            storyId: story?.id,
+                                            id: scene.id,
+                                        },
+                                    }"
+                                >
+                                    <IconPencil class="text-sm" />
+                                </RouterLink>
+                            </div>
+                        </template>
+                    </SceneThumbnail>
                 </div>
                 <div
                     v-if="story && !story.scenes.length"
