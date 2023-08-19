@@ -26,6 +26,7 @@ export type UpdatePointData = {
 export type MappedLineAction = {
     actionIndex: number;
     toPointId: string;
+    threadId: number;
 };
 export type MappedLinePoint = {
     pointId: string;
@@ -253,10 +254,8 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         actionIndex: number
     ) => {
         const needsNewStep = point.row + 1 > numSteps.value - 1;
-        console.log("needs new stopm, from", point.row, "vs", numSteps.value);
 
         if (needsNewStep) {
-            console.log("adding step");
             addStep();
         }
 
@@ -323,10 +322,127 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         return paginate.visibleItemIndexes.value;
     });
 
-    const piontLinesMap = computed(() => {
+    const applyPointLineMapThreads = (map: MappedLineStep[]) => {
+        // point A -> point B -> action index
+        const pointToPoint: Record<string, string[]> = {};
+
+        let threadInc = 0;
+
+        const mappedLinePointsKeyed = map.reduce((acc, stepMap) => {
+            stepMap.points.forEach((pointLine) => {
+                acc[pointLine.pointId] = pointLine;
+            });
+
+            return acc;
+        }, {} as { [K: string]: MappedLinePoint });
+
+        const followPointPath = (
+            point: MappedLinePoint,
+            fromAction?: MappedLineAction
+        ) => {
+            let pointActionFound = false;
+
+            point.actions.forEach((action) => {
+                if (!action.toPointId || action.threadId) {
+                    // no next ID. No line.
+                    // already been used, so stop!
+                    // console.log("no point id - abort");
+                    return false;
+                }
+
+                if (!pointToPoint[point.pointId]) {
+                    pointToPoint[point.pointId] = [];
+                }
+
+                if (pointToPoint[point.pointId].includes(action.toPointId)) {
+                    // point A -> point B has already happened
+                    // console.log(
+                    //     "point to point already mapped - abort",
+                    //     point,
+                    //     "to",
+                    //     action
+                    // );
+                    return;
+                }
+
+                const nextPoint = mappedLinePointsKeyed[action.toPointId];
+                if (!nextPoint) {
+                    // console.log("no next point!", action);
+                    return;
+                }
+
+                pointToPoint[point.pointId].push(action.toPointId);
+
+                if (fromAction) {
+                    /**
+                     * already on a thread, so try to follow
+                     */
+                    if (pointActionFound) {
+                        action.threadId = threadInc++;
+                        // console.log(
+                        //     "existing thread, new branch",
+                        //     action.threadId
+                        // );
+                        followPointPath(nextPoint, action);
+                    } else {
+                        // console.log(
+                        //     "existing thread, same path",
+                        //     fromAction.threadId
+                        // );
+                        pointActionFound = true;
+                        action.threadId = fromAction.threadId;
+                        followPointPath(nextPoint, action);
+                    }
+                } else {
+                    /**
+                     * start a new thread
+                     */
+                    // console.log("new thread!");
+                    action.threadId = threadInc++;
+                    followPointPath(nextPoint, action);
+                }
+            });
+        };
+
+        const followStepPoints = (step: MappedLineStep) => {
+            step.points.forEach((point) => {
+                if (pointToPoint[point.pointId]) {
+                    // pointhas already been used. It isn't a starting point
+                    return;
+                }
+
+                followPointPath(point);
+            });
+        };
+
+        map.forEach(followStepPoints);
+    };
+
+    const pointToLinePoint = (point: Point): MappedLinePoint => {
+        const pointObj: MappedLinePoint = {
+            pointId: point.id,
+            actions: [],
+            expanded: isPointExpanded(point.id),
+        };
+        point.actions.forEach((action, i) => {
+            if (!action.toPointId) {
+                return;
+            }
+
+            pointObj.actions.push({
+                actionIndex: i,
+                toPointId: action.toPointId,
+                threadId: 0,
+            });
+        });
+
+        return pointObj;
+    };
+
+    const pointLinesMap = computed(() => {
         const map: MappedLineStep[] = [];
 
-        visibleItemIndexes.value.forEach((stepIndex) => {
+        for (let stepIndex = 0; stepIndex < numSteps.value; stepIndex++) {
             const stepPoints = pointsByStep.value[stepIndex];
             if (!stepPoints) {
                 return;
@@ -338,30 +454,15 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
             };
 
             stepPoints.forEach((point) => {
-                const pointObj: MappedLinePoint = {
-                    pointId: point.id,
-                    actions: [],
-                    expanded: isPointExpanded(point.id),
-                };
-                point.actions.forEach((action, i) => {
-                    if (!action.toPointId) {
-                        return;
-                    }
+                const pointObj = pointToLinePoint(point);
 
-                    pointObj.actions.push({
-                        actionIndex: i,
-                        toPointId: action.toPointId,
-                    });
-                });
-
-                if (pointObj.actions.length) {
-                    stepObj.points.push(pointObj);
-                }
+                stepObj.points.push(pointObj);
             });
-            if (stepObj.points.length) {
-                map.push(stepObj);
-            }
-        });
+
+            map.push(stepObj);
+        }
+
+        applyPointLineMapThreads(map);
 
         return map;
     });
@@ -376,7 +477,7 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         pointsByStep,
         pointsGrid,
         visibleItemIndexes,
-        piontLinesMap,
+        pointLinesMap,
         pointsExpandedIds,
         setPointExpanded,
         isPointExpanded,

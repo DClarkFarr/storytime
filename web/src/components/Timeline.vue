@@ -105,8 +105,10 @@ onMounted(() => {
         :style="{ '--width': `${STEP_WIDTH}px` }"
     >
         <RelativeLines
+            v-if="timeline.pointLinesMap.value"
             :container="timelineRef"
-            :point-lines="timeline.piontLinesMap.value"
+            :point-lines="timeline.pointLinesMap.value"
+            :visible-item-indexes="timeline.visibleItemIndexes.value"
         />
         <div class="timeline__steps p-2 mb-2" ref="timelineStepsRef">
             <div

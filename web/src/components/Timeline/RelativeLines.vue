@@ -8,14 +8,19 @@ import { getColors } from "@/methods/colors";
 import { debounce } from "lodash-es";
 import { ref, watch } from "vue";
 
+import { useWindowSize } from "@vueuse/core";
+
 type Coords = {
     x: number;
     y: number;
 };
 
+const { width: windowWidth } = useWindowSize();
+
 const props = defineProps<{
     container: HTMLDivElement | null;
     pointLines: MappedLineStep[];
+    visibleItemIndexes: number[];
 }>();
 
 const elementRef = ref<HTMLDivElement | null>(null);
@@ -28,11 +33,13 @@ const clearLines = () => {
     elementRef.value.innerHTML = "";
 };
 
+const colors = getColors();
+
 const drawLines = () => {
     clearLines();
 
     if (!props.container) {
-        console.warn("No container element");
+        // console.warn("No container element");
         return;
     }
     props.pointLines.forEach(({ stepIndex, points }) => {
@@ -40,7 +47,8 @@ const drawLines = () => {
             `.timeline__step[data-step="${stepIndex}"]`
         );
         if (!stepElement) {
-            return console.warn("Could not find step element", stepIndex);
+            // console.warn("Could not find step element", stepIndex);
+            return;
         }
         drawPointLines(stepElement as HTMLDivElement, points);
     });
@@ -84,7 +92,7 @@ const getContainerPosition = (fromCoords: Coords) => {
     };
     const pointLeft = {
         y: fromCoords.y,
-        x: containerRect.right - 5,
+        x: containerRect.right + 5,
     };
 
     return {
@@ -95,7 +103,7 @@ const getContainerPosition = (fromCoords: Coords) => {
 };
 
 const drawActionLine = (
-    { actionIndex, toPointId }: MappedLineAction,
+    { actionIndex, toPointId, threadId }: MappedLineAction,
     actionsTarget: HTMLDivElement | null,
     fallbackTarget: HTMLDivElement
 ) => {
@@ -119,6 +127,8 @@ const drawActionLine = (
     const { degree } = calcSlope(fromCoords.pointRight, toCoords.pointLeft);
     const width = calcDistance(fromCoords.pointRight, toCoords.pointLeft);
 
+    const color = colors[threadId % colors.length];
+
     const line = document.createElement("div");
     line.classList.add("line");
 
@@ -128,6 +138,7 @@ const drawActionLine = (
     line.style.setProperty("--end-y", toCoords.pointLeft.y + "px");
     line.style.setProperty("--width", `${width}px`);
     line.style.setProperty("--rotate", `${degree}deg`);
+    line.style.setProperty("--color", color);
 
     const startBubble = document.createElement("div");
     startBubble.classList.add("line__bubble");
@@ -161,11 +172,11 @@ const getElementCoords = (element: HTMLDivElement) => {
 
     const pointLeft = {
         y: rect.top - containerRect.top + rect.height / 2,
-        x: rect.left - 5,
+        x: rect.left - containerRect.left - 5,
     };
     const pointRight = {
         y: rect.top - containerRect.top + rect.height / 2,
-        x: rect.right - 10,
+        x: rect.right - containerRect.left - 0,
     };
 
     return {
@@ -194,7 +205,7 @@ const calcDistance = (startCoords: Coords, endCoords: Coords) => {
 };
 
 watch(
-    [() => props.pointLines],
+    [() => props.pointLines, windowWidth, () => props.visibleItemIndexes],
     () => {
         debounceDrawLines();
     },
@@ -211,12 +222,12 @@ watch(
 <style lang="scss">
 .line {
     position: absolute;
-    background: red;
+    background: var(--color);
     height: 2px;
     width: var(--width);
     top: var(--start-y);
     left: var(--start-x);
-    pointer-events: none;
+    // pointer-events: none;
     transform-origin: 0 0;
     transform: rotate(var(--rotate));
 
