@@ -227,7 +227,7 @@ watch(
     width: var(--width);
     top: var(--start-y);
     left: var(--start-x);
-    // pointer-events: none;
+    pointer-events: none;
     transform-origin: 0 0;
     transform: rotate(var(--rotate));
 

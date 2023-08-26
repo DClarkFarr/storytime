@@ -24,6 +24,10 @@
             @apply bg-sky-600 text-white hover:bg-sky-800;
         }
 
+        &--success {
+            @apply bg-emerald-600 text-white hover:bg-emerald-800;
+        }
+
         &--danger {
             @apply bg-red-600 text-white hover:bg-red-800;
         }

@@ -16,6 +16,14 @@ const routes = [
         component: () => import("../pages/EditStory.vue"),
     },
     {
+        path: "/story/:id/play",
+        meta: {
+            auth: false,
+        },
+        name: "story.play",
+        component: () => import("../pages/PlayStory.vue"),
+    },
+    {
         path: "/story/:storyId/scene/:id",
         meta: {
             auth: true,

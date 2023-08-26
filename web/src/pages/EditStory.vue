@@ -11,6 +11,7 @@ import IconSpinner from "~icons/fa6-solid/spinner";
 import IconCaretLeft from "~icons/fa6-solid/caret-left";
 import IconPencil from "~icons/fa6-solid/pencil";
 import IconCopy from "~icons/fa6-solid/copy";
+import IconPlay from "~icons/fa6-solid/play";
 import { Scene } from "@/types/Scene";
 
 const router = useRouter();
@@ -113,6 +114,7 @@ onMounted(() => {
             <div class="flex flex items-center gap-x-3">
                 <div>
                     <RouterLink
+                        target="_blank"
                         class="btn btn--light"
                         :to="{
                             name: 'home',
@@ -149,21 +151,37 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="ml-auto">
-                    <button
-                        class="btn btn--primary"
-                        @click="onCreateScene"
-                        :disabled="creatingScene"
-                    >
-                        <template v-if="creatingScene">
-                            <IconSpinner class="text-sm inline animate-spin" />
-                            Creating...
-                        </template>
-                        <template v-else>
-                            <IconPlus class="text-sm inline" />
-                            Scene
-                        </template>
-                    </button>
+                <div class="ml-auto flex items-center gap-x-2">
+                    <div>
+                        <RouterLink
+                            :to="{
+                                name: 'story.play',
+                                params: { id: story?.id },
+                            }"
+                            class="btn btn--success"
+                        >
+                            <IconPlay class="text-sm inline" />
+                            Play
+                        </RouterLink>
+                    </div>
+                    <div>
+                        <button
+                            class="btn btn--primary"
+                            @click="onCreateScene"
+                            :disabled="creatingScene"
+                        >
+                            <template v-if="creatingScene">
+                                <IconSpinner
+                                    class="text-sm inline animate-spin"
+                                />
+                                Creating...
+                            </template>
+                            <template v-else>
+                                <IconPlus class="text-sm inline" />
+                                Scene
+                            </template>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
