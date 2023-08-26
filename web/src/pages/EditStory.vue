@@ -114,7 +114,6 @@ onMounted(() => {
             <div class="flex flex items-center gap-x-3">
                 <div>
                     <RouterLink
-                        target="_blank"
                         class="btn btn--light"
                         :to="{
                             name: 'home',
@@ -154,6 +153,7 @@ onMounted(() => {
                 <div class="ml-auto flex items-center gap-x-2">
                     <div>
                         <RouterLink
+                            target="_blank"
                             :to="{
                                 name: 'story.play',
                                 params: { id: story?.id },
