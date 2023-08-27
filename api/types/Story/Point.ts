@@ -7,6 +7,7 @@ export interface PointDocumentSchema extends Document {
     row: number;
     col: number;
     actions: object[];
+    shortcodes: object[];
     createdAt: Date;
 }
 

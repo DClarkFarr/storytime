@@ -1,6 +1,7 @@
 import { SceneDocumentSchema } from "../types/Scene";
 import { StoryDocumentSchema } from "../types/Story";
 import { PointDocumentSchema } from "../types/Story/Point";
+import { ShortcodeDocumentSchema } from "../types/Story/Shortcode";
 import { UploadDocumentSchema } from "../types/Upload";
 import { UserDocumentSchema } from "../types/User";
 import { getDb } from "./connect";
@@ -23,4 +24,8 @@ export const getUploadsCollection = async () => {
 
 export const getPointsCollection = async () => {
     return (await getDb()).collection<PointDocumentSchema>("points");
+};
+
+export const getShortcodesCollection = async () => {
+    return (await getDb()).collection<ShortcodeDocumentSchema>("shortcodes");
 };

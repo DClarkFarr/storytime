@@ -130,6 +130,53 @@ async function registerPointIndexes(db: Db) {
     }
 }
 
+async function registerShortcodeIndexes(db: Db) {
+    try {
+        await db.createCollection("shortcodes", {});
+        console.log("created collection shortcodes");
+    } catch {}
+
+    const shortcodesCollection = db.collection("shortcodes");
+
+    const shortcodeIndexes = {
+        userId: false,
+        storyId: false,
+        pointId: false,
+        userStory: false,
+    };
+
+    const indexes = await shortcodesCollection.listIndexes().toArray();
+
+    for (let index of indexes) {
+        shortcodeIndexes[index.name] = true;
+    }
+
+    if (!shortcodeIndexes.userId) {
+        await shortcodesCollection.createIndex(
+            { userId: 1 },
+            { name: "userId" }
+        );
+    }
+    if (!shortcodeIndexes.storyId) {
+        await shortcodesCollection.createIndex(
+            { storyId: 1 },
+            { name: "storyId" }
+        );
+    }
+    if (!shortcodeIndexes.pointId) {
+        await shortcodesCollection.createIndex(
+            { pointId: 1 },
+            { name: "pointId" }
+        );
+    }
+    if (!shortcodeIndexes.userStory) {
+        await shortcodesCollection.createIndex(
+            { userId: 1, storyId: 1 },
+            { name: "userStory" }
+        );
+    }
+}
+
 async function applyIndexes() {
     const db = await getDb();
 
@@ -137,6 +184,7 @@ async function applyIndexes() {
     registerStoryIndexes(db);
     registerSceneIndexes(db);
     registerPointIndexes(db);
+    registerShortcodeIndexes(db);
 }
 
 async function initializeDb() {

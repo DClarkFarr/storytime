@@ -13,11 +13,16 @@ import IconPencil from "~icons/fa6-solid/pencil";
 import IconCopy from "~icons/fa6-solid/copy";
 import IconPlay from "~icons/fa6-solid/play";
 import { Scene } from "@/types/Scene";
+import { useModal } from "vue-final-modal";
+import ShortcodeModal from "@/components/Modals/ShortcodeModal.vue";
+import { Shortcode } from "@/types/Shortcode";
+import { AxiosResponse } from "axios";
 
 const router = useRouter();
 const route = useRoute();
 const isLoading = ref(false);
 const story = ref<StoryWithScenes | null>(null);
+const shortcodes = ref<Shortcode[]>([]);
 
 const creatingScene = ref(false);
 
@@ -25,6 +30,20 @@ const editName = ref(false);
 const editDescription = ref(false);
 
 const nameRef = ref<HTMLInputElement | null>(null);
+
+const shortcodeModal = useModal({
+    component: ShortcodeModal,
+    attrs: {
+        shortcode: null,
+        storyId: "",
+        onCancel: () => {
+            shortcodeModal.close();
+        },
+        onChange: (shortcode: Shortcode) => {
+            console.log("shortcode changed", shortcode);
+        },
+    },
+});
 
 const onCreateScene = () => {
     creatingScene.value = true;
@@ -51,10 +70,20 @@ const loadStory = async (id: string) => {
         story.value = await httpClient
             .get(`/story/${id}`)
             .then((response) => response.data.row);
+
+        await loadShortcodes();
     } catch (err) {
         console.error("Error loading story", err);
     }
     isLoading.value = false;
+};
+
+const loadShortcodes = async () => {
+    shortcodes.value = await httpClient
+        .get<any, AxiosResponse<{ rows: Shortcode[] }>>(
+            `/story/${story.value?.id}/shortcode`
+        )
+        .then(({ data }) => data.rows);
 };
 
 const saveStory = () => {
@@ -100,6 +129,30 @@ const onClickCopyScene = async (scene: Scene) => {
                 },
             });
         });
+};
+
+const onCreateShortcode = () => {
+    shortcodeModal.patchOptions({
+        attrs: {
+            shortcode: null,
+            storyId: story.value?.id || "",
+        },
+    });
+    shortcodeModal.open();
+};
+
+const makeSlug = (slug: string) => {
+    return `[${slug}]`;
+};
+
+const onClickEditShortcode = (shortcode: Shortcode) => {
+    shortcodeModal.patchOptions({
+        attrs: {
+            shortcode,
+            storyId: story.value?.id || "",
+        },
+    });
+    shortcodeModal.open();
 };
 
 onMounted(() => {
@@ -258,9 +311,41 @@ onMounted(() => {
                 </div>
             </div>
 
+            <h3 class="font-semibold">Shortcodes</h3>
+            <div class="flex flex-col gap-x-1 mb-4 lg:w-1/2">
+                <div
+                    v-for="sc in shortcodes"
+                    :key="sc.id"
+                    class="flex gap-x-3 items-center p-2 border border-gray-200 bg-gray-100"
+                >
+                    <div class="font-semibold">{{ makeSlug(sc.slug) }}</div>
+                    <div>Type: {{ sc.returnType }}</div>
+                    <div class="ml-auto">
+                        <button
+                            class="btn btn--primary btn--sm"
+                            @click="onClickEditShortcode(sc)"
+                        >
+                            <IconPencil class="inline text-xs" />
+                        </button>
+                    </div>
+                </div>
+                <div
+                    class="text-center p-4 text-gray-500 bg-gray-100"
+                    v-if="!isLoading && !shortcodes.length"
+                >
+                    Add shortcodes to begin
+                </div>
+            </div>
+            <div class="mb-8">
+                <button class="btn btn--light" @click="onCreateShortcode()">
+                    <IconPlus class="text-sm inline" />
+                    Shortcode
+                </button>
+            </div>
+
             <h3 class="font-semibold">Construct Timeline</h3>
             <div class="timeline" v-if="story">
-                <Timeline :story="story" />
+                <Timeline :story="story" :shortcodes="shortcodes" />
             </div>
         </div>
     </div>

@@ -9,6 +9,7 @@ import Dropdown from "../controls/Dropdown.vue";
 import { debounce } from "lodash-es";
 import PointItemHorizontal from "../Scene/PointItemHorizontal.vue";
 import { computed } from "vue";
+import { Shortcode } from "@/types/Shortcode";
 
 const emit = defineEmits<{
     cancel: [];
@@ -20,6 +21,7 @@ const emit = defineEmits<{
 const props = withDefaults(
     defineProps<{
         point: PointWithScene | null;
+        shortcodes: Shortcode[];
         futurePoints: PointWithScene[];
         clickToClose?: boolean;
         escToClose?: boolean;
@@ -78,6 +80,10 @@ const onRemoveNextPoint = (actionIndex: number) => {
     point.actions[actionIndex].toPointId = "";
 
     emit("change", point as PointWithScene);
+};
+
+const onEditActionShortcodes = (actionIndex: number) => {
+    console.log("actionIndex", actionIndex);
 };
 
 const actionPoints = computed(() => {
@@ -215,14 +221,34 @@ const actionPoints = computed(() => {
                                         :point="(actionPoints[index] as PointWithScene)"
                                     >
                                         <template #actions>
-                                            <button
-                                                class="btn btn--danger"
-                                                @click="
-                                                    onRemoveNextPoint(index)
-                                                "
-                                            >
-                                                <IconMinus class="text-xs" />
-                                            </button>
+                                            <div class="flex gap-x-2">
+                                                <div>
+                                                    <button
+                                                        class="btn btn--primary btn--sm"
+                                                        @click="
+                                                            onEditActionShortcodes(
+                                                                index
+                                                            )
+                                                        "
+                                                    >
+                                                        Shortcodes
+                                                    </button>
+                                                </div>
+                                                <div>
+                                                    <button
+                                                        class="btn btn--danger btn--sm"
+                                                        @click="
+                                                            onRemoveNextPoint(
+                                                                index
+                                                            )
+                                                        "
+                                                    >
+                                                        <IconMinus
+                                                            class="text-xs"
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </template>
                                     </PointItemHorizontal>
                                 </div>

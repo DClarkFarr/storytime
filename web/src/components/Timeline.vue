@@ -9,11 +9,13 @@ import AttachSceneModal from "./Modals/AttachSceneModal.vue";
 import { Scene } from "@/types/Scene";
 import EditActionsModal from "./Modals/EditActionsModal.vue";
 import RelativeLines from "./Timeline/RelativeLines.vue";
+import { Shortcode } from "@/types/Shortcode";
 
 const STEP_WIDTH = 175;
 
 const props = defineProps<{
     story: StoryWithScenes;
+    shortcodes: Shortcode[];
 }>();
 
 const timelineRef = ref<HTMLDivElement | null>(null);
@@ -63,6 +65,7 @@ const editActionsModal = useModal({
     component: EditActionsModal,
     attrs: {
         point: null,
+        shortcodes: props.shortcodes,
         futurePoints: [],
         onCancel: () => {
             editActionsModal.close();
@@ -84,6 +87,7 @@ const onEditPointActions = async (point: PointWithScene) => {
     editActionsModal.patchOptions({
         attrs: {
             point,
+            shortcodes: props.shortcodes,
             futurePoints: timeline.getFuturePoints(point),
         },
     });

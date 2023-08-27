@@ -5,6 +5,7 @@ import { StoryDocumentSchema } from "../../types/Story";
 import {
     getPointsCollection,
     getScenesCollection,
+    getShortcodesCollection,
     getStoriesCollection,
 } from "../../db/collections";
 import DbError from "../../errors/DbError";
@@ -16,6 +17,7 @@ import {
 import UserError from "../../errors/UserError";
 import { duplicateScene, toSceneObject } from "../../db/scene";
 import { toPointObject } from "../../db/point";
+import { toShortcodeObject } from "../../db/shortcode";
 
 const router = Router();
 
@@ -134,6 +136,84 @@ router.post(
 );
 
 /**
+ * Get story shortcodes
+ */
+router.get("/:id/shortcode", async (req: HasSessionRequest, res, next) => {
+    const shortcodesCollection = await getShortcodesCollection();
+
+    try {
+        const shortcodes = await shortcodesCollection
+            .find({
+                storyId: new ObjectId(req.params.id),
+                userId: req.user._id,
+            })
+            .toArray();
+
+        res.json({ rows: shortcodes.map(toShortcodeObject) });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * Create story shortcode
+ */
+router.post("/:id/shortcode", async (req: HasSessionRequest, res, next) => {
+    const shortcodesCollection = await getShortcodesCollection();
+
+    const slug = req.body.slug;
+    const returnType = req.body.returnType;
+    const formatState = req.body.formatState;
+    const initState = req.body.initState;
+    const pointId = req.body.pointId;
+
+    try {
+        if (!returnType) {
+            throw new UserError("Return type is required", 400);
+        }
+
+        if (!formatState || !initState) {
+            throw new UserError(
+                "Format state and init state are required",
+                400
+            );
+        }
+
+        const existing = await shortcodesCollection.findOne({
+            storyId: new ObjectId(req.params.id),
+            userId: req.user._id,
+            slug,
+        });
+
+        if (existing) {
+            throw new UserError("Shortcode name already exists", 400);
+        }
+
+        const toSet = {
+            storyId: new ObjectId(req.params.id),
+            userId: req.user._id,
+            pointId: pointId ? new ObjectId(pointId) : null,
+            slug,
+            returnType,
+            createdAt: new Date(),
+            formatState,
+            initState,
+        };
+
+        const { insertedId } = await shortcodesCollection.insertOne(toSet);
+
+        const created = await shortcodesCollection.findOne({
+            _id: insertedId,
+            userId: req.user._id,
+        });
+
+        res.json({ row: toShortcodeObject(created) });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
  * Get story points
  */
 router.get("/:id/point", async (req: HasSessionRequest, res, next) => {
@@ -187,6 +267,7 @@ router.post("/:id/point", async (req: HasSessionRequest, res, next) => {
             row,
             col,
             actions: [],
+            shortcodes: [],
             createdAt: new Date(),
         });
 

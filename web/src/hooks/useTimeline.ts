@@ -445,7 +445,7 @@ const useTimeline = ({ timelineRef, story, stepWidth }: UseTimelineProps) => {
         for (let stepIndex = 0; stepIndex < numSteps.value; stepIndex++) {
             const stepPoints = pointsByStep.value[stepIndex];
             if (!stepPoints) {
-                return;
+                continue;
             }
 
             const stepObj: MappedLineStep = {
